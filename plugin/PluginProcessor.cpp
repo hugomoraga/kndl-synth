@@ -2,7 +2,10 @@
 #include "PluginEditor.h"
 
 KndlSynthAudioProcessor::KndlSynthAudioProcessor()
-    : juce::AudioProcessor (BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true))
+    : juce::AudioProcessor (BusesProperties().withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
+      apvts(*this, nullptr, "Parameters", kndl::createParameterLayout()),
+      synth(apvts),
+      presetManager(apvts)
 {
 }
 
@@ -19,44 +22,75 @@ void KndlSynthAudioProcessor::setCurrentProgram (int) {}
 const juce::String KndlSynthAudioProcessor::getProgramName (int) { return {}; }
 void KndlSynthAudioProcessor::changeProgramName (int, const juce::String&) {}
 
-void KndlSynthAudioProcessor::prepareToPlay (double, int) {}
+void KndlSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+{
+    synth.prepare(sampleRate, samplesPerBlock);
+}
+
 void KndlSynthAudioProcessor::releaseResources() {}
 
 #if ! JucePlugin_PreferredChannelConfigurations
 bool KndlSynthAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
-    // We only support stereo output in this MVP.
-    return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
+    return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo()
+        || layouts.getMainOutputChannelSet() == juce::AudioChannelSet::mono();
 }
 #endif
 
-void KndlSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi)
+void KndlSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    buffer.clear(); // silence for now (we'll add oscillator next)
-
-    // Consume MIDI so hosts stop complaining, but do nothing yet.
-    midi.clear();
+    
+    // Track MIDI activity
+    for (const auto metadata : midiMessages)
+    {
+        const auto message = metadata.getMessage();
+        if (message.isNoteOn())
+        {
+            lastMidiNote.store(message.getNoteNumber());
+            midiActivity.store(true);
+        }
+    }
+    
+    // Clear buffer before processing
+    buffer.clear();
+    
+    // Process synth
+    synth.processBlock(buffer, midiMessages);
+    
+    // Calculate RMS level for debug display
+    float rms = 0.0f;
+    for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+    {
+        rms += buffer.getRMSLevel(channel, 0, buffer.getNumSamples());
+    }
+    if (buffer.getNumChannels() > 0)
+        rms /= static_cast<float>(buffer.getNumChannels());
+    
+    currentLevel.store(rms);
 }
 
 bool KndlSynthAudioProcessor::hasEditor() const { return true; }
 
 juce::AudioProcessorEditor* KndlSynthAudioProcessor::createEditor()
 {
-    return new KndlSynthAudioProcessorEditor (*this);
+    return new KndlSynthAudioProcessorEditor(*this);
 }
 
 void KndlSynthAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // MVP: no parameters yet.
-    juce::MemoryOutputStream mos(destData, true);
-    mos.writeString("kndl_synth_state_v0");
+    auto state = apvts.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
 void KndlSynthAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    juce::MemoryInputStream mis(data, static_cast<size_t>(sizeInBytes), false);
-    (void) mis.readString();
+    std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
+    if (xml && xml->hasTagName(apvts.state.getType()))
+    {
+        apvts.replaceState(juce::ValueTree::fromXml(*xml));
+    }
 }
 
 // This creates new instances of the plugin
