@@ -37,10 +37,10 @@ void KndlSynth::prepare(double newSampleRate, int newSamplesPerBlock)
     dcBlockerL.prepare(newSampleRate);
     dcBlockerR.prepare(newSampleRate);
     
-    // Prepare safety limiter
+    // Prepare safety limiter - engage early to prevent harsh clipping
     safetyLimiter.prepare(newSampleRate);
-    safetyLimiter.setThreshold(-1.0f);   // Start limiting at -1 dBFS
-    safetyLimiter.setCeiling(-0.1f);     // Absolute ceiling at -0.1 dBFS
+    safetyLimiter.setThreshold(-3.0f);   // Start limiting at -3 dBFS (earlier = smoother)
+    safetyLimiter.setCeiling(-0.3f);     // Absolute ceiling at -0.3 dBFS
     
     masterGain.reset(newSampleRate, 0.02);
     
@@ -90,10 +90,11 @@ void KndlSynth::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&
             float gainL = std::cos(panAngle * juce::MathConstants<float>::halfPi);
             float gainR = std::sin(panAngle * juce::MathConstants<float>::halfPi);
             
-            leftChannel[sampleIndex] = mono * gainL;
+            float left = mono * gainL;
             
             if (rightChannel)
             {
+                float right;
                 // Apply Haas effect for stereo width: delay R channel slightly
                 if (width > 0.01f && !widthDelayBuffer.empty() && widthDelaySamples > 0)
                 {
@@ -103,13 +104,20 @@ void KndlSynth::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&
                     float delayedR = widthDelayBuffer[readIdx];
                     widthDelayWriteIdx = (widthDelayWriteIdx + 1) % widthDelayBuffer.size();
                     
-                    // Blend between mono and decorrelated
-                    rightChannel[sampleIndex] = delayedR * gainR;
+                    right = delayedR * gainR;
                 }
                 else
                 {
-                    rightChannel[sampleIndex] = mono * gainR;
+                    right = mono * gainR;
                 }
+                
+                // Final soft clip: tanh for gentle saturation on peaks
+                leftChannel[sampleIndex]  = std::tanh(left);
+                rightChannel[sampleIndex] = std::tanh(right);
+            }
+            else
+            {
+                leftChannel[sampleIndex] = std::tanh(left);
             }
             
             sampleIndex++;
@@ -127,10 +135,11 @@ void KndlSynth::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&
         float gainL = std::cos(panAngle * juce::MathConstants<float>::halfPi);
         float gainR = std::sin(panAngle * juce::MathConstants<float>::halfPi);
         
-        leftChannel[sampleIndex] = mono * gainL;
+        float left = mono * gainL;
         
         if (rightChannel)
         {
+            float right;
             if (width > 0.01f && !widthDelayBuffer.empty() && widthDelaySamples > 0)
             {
                 widthDelayBuffer[widthDelayWriteIdx] = mono;
@@ -138,12 +147,19 @@ void KndlSynth::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&
                                  % widthDelayBuffer.size();
                 float delayedR = widthDelayBuffer[readIdx];
                 widthDelayWriteIdx = (widthDelayWriteIdx + 1) % widthDelayBuffer.size();
-                rightChannel[sampleIndex] = delayedR * gainR;
+                right = delayedR * gainR;
             }
             else
             {
-                rightChannel[sampleIndex] = mono * gainR;
+                right = mono * gainR;
             }
+            
+            leftChannel[sampleIndex]  = std::tanh(left);
+            rightChannel[sampleIndex] = std::tanh(right);
+        }
+        else
+        {
+            leftChannel[sampleIndex] = std::tanh(left);
         }
         
         sampleIndex++;
@@ -251,10 +267,11 @@ float KndlSynth::processSample()
     float output = voiceManager.process();
     
     // Normalize polyphonic sum to prevent volume explosion with many voices
+    // Using N^0.6 instead of sqrt(N) for more aggressive normalization
     int activeVoices = voiceManager.getActiveVoiceCount();
     if (activeVoices > 1)
     {
-        float normFactor = 1.0f / std::sqrt(static_cast<float>(activeVoices));
+        float normFactor = 1.0f / std::pow(static_cast<float>(activeVoices), 0.6f);
         output *= normFactor;
     }
     

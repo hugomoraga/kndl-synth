@@ -111,6 +111,22 @@ float Voice::process()
     // Add sub and noise
     float mixed = oscMix + subOut + noiseOut;
     
+    // === Source normalization ===
+    // Count active sources to prevent volume explosion when stacking layers
+    int activeSources = 0;
+    if (osc1Enabled && osc1Level > 0.01f) activeSources++;
+    if (osc2Enabled && osc2Level > 0.01f) activeSources++;
+    if (subEnabled && subLevel > 0.01f)   activeSources++;
+    if (modulatedNoiseLevel > 0.01f)      activeSources++;
+    
+    // Gentle normalization: 1 source = 1.0, 2 = 0.78, 3 = 0.67, 4 = 0.58
+    if (activeSources > 1)
+        mixed *= 1.0f / std::sqrt(static_cast<float>(activeSources));
+    
+    // Soft saturation to tame peaks (tanh instead of hard clip)
+    if (std::abs(mixed) > 1.0f)
+        mixed = std::tanh(mixed);
+    
     // Protección contra valores inválidos del oscilador
     if (!std::isfinite(mixed))
         mixed = 0.0f;
@@ -166,8 +182,10 @@ float Voice::process()
     float ampMod = juce::jlimit(0.0f, 2.0f, 1.0f + ampLevelMod);
     float output = filtered * ampEnvValue * velocity * ampMod;
     
-    // Limitar output para evitar explosiones
-    output = juce::jlimit(-2.0f, 2.0f, output);
+    // Soft saturation: tanh for peaks, hard limit as safety net
+    if (std::abs(output) > 0.9f)
+        output = std::tanh(output);
+    output = juce::jlimit(-1.5f, 1.5f, output);
     
     // Update debug info
     debugInfo.osc1Value = osc1Out;
