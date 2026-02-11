@@ -495,6 +495,253 @@ private:
   <PARAM id="dist_enable" value="0"/><PARAM id="chorus_enable" value="0"/>
   <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="280"/><PARAM id="delay_feedback" value="0.55"/><PARAM id="delay_mix" value="0.35"/>
   <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.8"/><PARAM id="reverb_damp" value="0.3"/><PARAM id="reverb_mix" value="0.45"/>
+</Parameters>)" },
+
+            // =========================================================
+            // CINEMATIC / EXPERIMENTAL PRESETS
+            // =========================================================
+
+            { "Sardaukar Chant", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Sardaukar Chant" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="2"/><PARAM id="osc1_level" value="0.75"/><PARAM id="osc1_detune" value="-3"/><PARAM id="osc1_octave" value="-1"/>
+  <PARAM id="osc2_waveform" value="2"/><PARAM id="osc2_level" value="0.7"/><PARAM id="osc2_detune" value="3"/><PARAM id="osc2_octave" value="-1"/>
+  <PARAM id="sub_level" value="0.6"/><PARAM id="sub_octave" value="-2"/>
+  <PARAM id="filter_cutoff" value="1400"/><PARAM id="filter_resonance" value="0.45"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.15"/><PARAM id="filter_env_amount" value="0.25"/>
+  <PARAM id="filter_mode" value="1"/><PARAM id="formant_vowel" value="3"/>
+  <PARAM id="amp_attack" value="1.8"/><PARAM id="amp_decay" value="1.0"/><PARAM id="amp_sustain" value="0.85"/><PARAM id="amp_release" value="4.0"/>
+  <PARAM id="filter_attack" value="3.0"/><PARAM id="filter_decay" value="2.0"/><PARAM id="filter_sustain" value="0.4"/><PARAM id="filter_release" value="5.0"/>
+  <PARAM id="lfo1_rate" value="0.08"/><PARAM id="lfo1_waveform" value="1"/><PARAM id="lfo2_rate" value="0.12"/><PARAM id="lfo2_waveform" value="0"/>
+  <PARAM id="orbit_shape" value="3"/><PARAM id="orbit_rate" value="0.06"/>
+  <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.55"/>
+  <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="7"/><PARAM id="mod_2_amt" value="0.3"/>
+  <PARAM id="mod_3_src" value="1"/><PARAM id="mod_3_dst" value="3"/><PARAM id="mod_3_amt" value="0.2"/>
+  <PARAM id="mod_4_src" value="2"/><PARAM id="mod_4_dst" value="4"/><PARAM id="mod_4_amt" value="-0.2"/>
+  <PARAM id="mod_5_src" value="10"/><PARAM id="mod_5_dst" value="5"/><PARAM id="mod_5_amt" value="0.15"/>
+  <PARAM id="mod_6_src" value="4"/><PARAM id="mod_6_dst" value="8"/><PARAM id="mod_6_amt" value="0.3"/>
+  <PARAM id="master_gain" value="-6"/>
+  <PARAM id="dist_enable" value="1"/><PARAM id="dist_drive" value="1.5"/><PARAM id="dist_mix" value="0.15"/>
+  <PARAM id="chorus_enable" value="1"/><PARAM id="chorus_rate" value="0.12"/><PARAM id="chorus_depth" value="0.8"/><PARAM id="chorus_mix" value="0.35"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="800"/><PARAM id="delay_feedback" value="0.55"/><PARAM id="delay_mix" value="0.2"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.95"/><PARAM id="reverb_damp" value="0.45"/><PARAM id="reverb_mix" value="0.6"/>
+</Parameters>)" },
+
+            { "Sandworm Rising", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Sandworm Rising" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="2"/><PARAM id="osc1_level" value="0.9"/><PARAM id="osc1_detune" value="0"/><PARAM id="osc1_octave" value="-2"/>
+  <PARAM id="osc2_waveform" value="3"/><PARAM id="osc2_level" value="0.5"/><PARAM id="osc2_detune" value="-15"/><PARAM id="osc2_octave" value="-1"/>
+  <PARAM id="sub_level" value="0.8"/><PARAM id="sub_octave" value="-2"/>
+  <PARAM id="filter_cutoff" value="600"/><PARAM id="filter_resonance" value="0.7"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.4"/><PARAM id="filter_env_amount" value="0.7"/>
+  <PARAM id="filter_mode" value="2"/>
+  <PARAM id="amp_attack" value="3.0"/><PARAM id="amp_decay" value="0.5"/><PARAM id="amp_sustain" value="0.9"/><PARAM id="amp_release" value="5.0"/>
+  <PARAM id="filter_attack" value="4.0"/><PARAM id="filter_decay" value="2.0"/><PARAM id="filter_sustain" value="0.6"/><PARAM id="filter_release" value="6.0"/>
+  <PARAM id="lfo1_rate" value="0.05"/><PARAM id="lfo1_waveform" value="2"/><PARAM id="lfo2_rate" value="0.3"/><PARAM id="lfo2_waveform" value="0"/>
+  <PARAM id="orbit_shape" value="5"/><PARAM id="orbit_rate" value="0.04"/>
+  <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.6"/>
+  <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="1"/><PARAM id="mod_2_amt" value="0.08"/>
+  <PARAM id="mod_3_src" value="1"/><PARAM id="mod_3_dst" value="7"/><PARAM id="mod_3_amt" value="0.4"/>
+  <PARAM id="mod_4_src" value="4"/><PARAM id="mod_4_dst" value="6"/><PARAM id="mod_4_amt" value="0.5"/>
+  <PARAM id="mod_5_src" value="10"/><PARAM id="mod_5_dst" value="8"/><PARAM id="mod_5_amt" value="0.15"/>
+  <PARAM id="mod_6_src" value="2"/><PARAM id="mod_6_dst" value="2"/><PARAM id="mod_6_amt" value="0.05"/>
+  <PARAM id="master_gain" value="-8"/>
+  <PARAM id="dist_enable" value="1"/><PARAM id="dist_drive" value="3.0"/><PARAM id="dist_mix" value="0.25"/>
+  <PARAM id="chorus_enable" value="0"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="1200"/><PARAM id="delay_feedback" value="0.65"/><PARAM id="delay_mix" value="0.15"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.98"/><PARAM id="reverb_damp" value="0.55"/><PARAM id="reverb_mix" value="0.55"/>
+</Parameters>)" },
+
+            { "Spice Vision", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Spice Vision" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="0"/><PARAM id="osc1_level" value="0.6"/><PARAM id="osc1_detune" value="-7"/><PARAM id="osc1_octave" value="0"/>
+  <PARAM id="osc2_waveform" value="0"/><PARAM id="osc2_level" value="0.6"/><PARAM id="osc2_detune" value="7"/><PARAM id="osc2_octave" value="1"/>
+  <PARAM id="sub_level" value="0.3"/><PARAM id="sub_octave" value="-1"/>
+  <PARAM id="filter_cutoff" value="4500"/><PARAM id="filter_resonance" value="0.25"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.0"/><PARAM id="filter_env_amount" value="0.1"/>
+  <PARAM id="filter_mode" value="0"/>
+  <PARAM id="amp_attack" value="2.5"/><PARAM id="amp_decay" value="1.5"/><PARAM id="amp_sustain" value="0.75"/><PARAM id="amp_release" value="5.0"/>
+  <PARAM id="filter_attack" value="3.0"/><PARAM id="filter_decay" value="2.0"/><PARAM id="filter_sustain" value="0.5"/><PARAM id="filter_release" value="4.0"/>
+  <PARAM id="lfo1_rate" value="0.15"/><PARAM id="lfo1_waveform" value="0"/><PARAM id="lfo2_rate" value="0.07"/><PARAM id="lfo2_waveform" value="1"/>
+  <PARAM id="orbit_shape" value="6"/><PARAM id="orbit_rate" value="55.0"/>
+  <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="1"/><PARAM id="mod_1_amt" value="0.12"/>
+  <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="2"/><PARAM id="mod_2_amt" value="-0.12"/>
+  <PARAM id="mod_3_src" value="10"/><PARAM id="mod_3_dst" value="6"/><PARAM id="mod_3_amt" value="0.2"/>
+  <PARAM id="mod_4_src" value="1"/><PARAM id="mod_4_dst" value="8"/><PARAM id="mod_4_amt" value="0.15"/>
+  <PARAM id="mod_5_src" value="2"/><PARAM id="mod_5_dst" value="9"/><PARAM id="mod_5_amt" value="0.3"/>
+  <PARAM id="mod_6_src" value="11"/><PARAM id="mod_6_dst" value="7"/><PARAM id="mod_6_amt" value="0.2"/>
+  <PARAM id="master_gain" value="-7"/>
+  <PARAM id="dist_enable" value="0"/>
+  <PARAM id="chorus_enable" value="1"/><PARAM id="chorus_rate" value="0.08"/><PARAM id="chorus_depth" value="0.9"/><PARAM id="chorus_mix" value="0.45"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="600"/><PARAM id="delay_feedback" value="0.5"/><PARAM id="delay_mix" value="0.3"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.92"/><PARAM id="reverb_damp" value="0.25"/><PARAM id="reverb_mix" value="0.65"/>
+</Parameters>)" },
+
+            { "Fremen Whisper", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Fremen Whisper" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="2"/><PARAM id="osc1_level" value="0.4"/><PARAM id="osc1_detune" value="25"/><PARAM id="osc1_octave" value="1"/>
+  <PARAM id="osc2_waveform" value="2"/><PARAM id="osc2_level" value="0.4"/><PARAM id="osc2_detune" value="-25"/><PARAM id="osc2_octave" value="1"/>
+  <PARAM id="sub_level" value="0.15"/><PARAM id="sub_octave" value="0"/>
+  <PARAM id="filter_cutoff" value="2800"/><PARAM id="filter_resonance" value="0.65"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.05"/><PARAM id="filter_env_amount" value="-0.3"/>
+  <PARAM id="filter_mode" value="3"/>
+  <PARAM id="amp_attack" value="0.8"/><PARAM id="amp_decay" value="2.0"/><PARAM id="amp_sustain" value="0.3"/><PARAM id="amp_release" value="6.0"/>
+  <PARAM id="filter_attack" value="0.5"/><PARAM id="filter_decay" value="3.0"/><PARAM id="filter_sustain" value="0.2"/><PARAM id="filter_release" value="4.0"/>
+  <PARAM id="lfo1_rate" value="0.25"/><PARAM id="lfo1_waveform" value="0"/><PARAM id="lfo2_rate" value="3.5"/><PARAM id="lfo2_waveform" value="2"/>
+  <PARAM id="orbit_shape" value="1"/><PARAM id="orbit_rate" value="0.18"/>
+  <PARAM id="mod_1_src" value="1"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.35"/>
+  <PARAM id="mod_2_src" value="2"/><PARAM id="mod_2_dst" value="3"/><PARAM id="mod_2_amt" value="0.5"/>
+  <PARAM id="mod_3_src" value="2"/><PARAM id="mod_3_dst" value="4"/><PARAM id="mod_3_amt" value="-0.5"/>
+  <PARAM id="mod_4_src" value="8"/><PARAM id="mod_4_dst" value="7"/><PARAM id="mod_4_amt" value="0.4"/>
+  <PARAM id="mod_5_src" value="9"/><PARAM id="mod_5_dst" value="10"/><PARAM id="mod_5_amt" value="0.3"/>
+  <PARAM id="mod_6_src" value="3"/><PARAM id="mod_6_dst" value="8"/><PARAM id="mod_6_amt" value="0.4"/>
+  <PARAM id="master_gain" value="-5"/>
+  <PARAM id="dist_enable" value="0"/>
+  <PARAM id="chorus_enable" value="1"/><PARAM id="chorus_rate" value="0.3"/><PARAM id="chorus_depth" value="0.5"/><PARAM id="chorus_mix" value="0.3"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="450"/><PARAM id="delay_feedback" value="0.6"/><PARAM id="delay_mix" value="0.35"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.88"/><PARAM id="reverb_damp" value="0.5"/><PARAM id="reverb_mix" value="0.5"/>
+</Parameters>)" },
+
+            { "Arrakis Wind", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Arrakis Wind" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="2"/><PARAM id="osc1_level" value="0.8"/><PARAM id="osc1_detune" value="40"/><PARAM id="osc1_octave" value="0"/>
+  <PARAM id="osc2_waveform" value="3"/><PARAM id="osc2_level" value="0.6"/><PARAM id="osc2_detune" value="-35"/><PARAM id="osc2_octave" value="0"/>
+  <PARAM id="sub_level" value="0.0"/><PARAM id="sub_octave" value="-1"/>
+  <PARAM id="filter_cutoff" value="1200"/><PARAM id="filter_resonance" value="0.8"/><PARAM id="filter_type" value="2"/><PARAM id="filter_drive" value="0.3"/><PARAM id="filter_env_amount" value="0.4"/>
+  <PARAM id="filter_mode" value="2"/>
+  <PARAM id="amp_attack" value="2.0"/><PARAM id="amp_decay" value="1.0"/><PARAM id="amp_sustain" value="0.7"/><PARAM id="amp_release" value="3.0"/>
+  <PARAM id="filter_attack" value="1.5"/><PARAM id="filter_decay" value="3.0"/><PARAM id="filter_sustain" value="0.3"/><PARAM id="filter_release" value="4.0"/>
+  <PARAM id="lfo1_rate" value="0.4"/><PARAM id="lfo1_waveform" value="2"/><PARAM id="lfo2_rate" value="6.0"/><PARAM id="lfo2_waveform" value="0"/>
+  <PARAM id="orbit_shape" value="4"/><PARAM id="orbit_rate" value="0.35"/>
+  <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.7"/>
+  <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="7"/><PARAM id="mod_2_amt" value="0.5"/>
+  <PARAM id="mod_3_src" value="1"/><PARAM id="mod_3_dst" value="1"/><PARAM id="mod_3_amt" value="0.1"/>
+  <PARAM id="mod_4_src" value="2"/><PARAM id="mod_4_dst" value="2"/><PARAM id="mod_4_amt" value="-0.08"/>
+  <PARAM id="mod_5_src" value="10"/><PARAM id="mod_5_dst" value="9"/><PARAM id="mod_5_amt" value="0.4"/>
+  <PARAM id="mod_6_src" value="11"/><PARAM id="mod_6_dst" value="10"/><PARAM id="mod_6_amt" value="-0.35"/>
+  <PARAM id="master_gain" value="-7"/>
+  <PARAM id="dist_enable" value="1"/><PARAM id="dist_drive" value="2.0"/><PARAM id="dist_mix" value="0.2"/>
+  <PARAM id="chorus_enable" value="0"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="900"/><PARAM id="delay_feedback" value="0.7"/><PARAM id="delay_mix" value="0.25"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.93"/><PARAM id="reverb_damp" value="0.6"/><PARAM id="reverb_mix" value="0.5"/>
+</Parameters>)" },
+
+            { "Voice of the Worm", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Voice of the Worm" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="3"/><PARAM id="osc1_level" value="0.85"/><PARAM id="osc1_detune" value="0"/><PARAM id="osc1_octave" value="-2"/>
+  <PARAM id="osc2_waveform" value="2"/><PARAM id="osc2_level" value="0.65"/><PARAM id="osc2_detune" value="8"/><PARAM id="osc2_octave" value="-2"/>
+  <PARAM id="sub_level" value="0.9"/><PARAM id="sub_octave" value="-2"/>
+  <PARAM id="filter_cutoff" value="800"/><PARAM id="filter_resonance" value="0.55"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.5"/><PARAM id="filter_env_amount" value="0.35"/>
+  <PARAM id="filter_mode" value="1"/><PARAM id="formant_vowel" value="4"/>
+  <PARAM id="amp_attack" value="2.0"/><PARAM id="amp_decay" value="0.8"/><PARAM id="amp_sustain" value="0.9"/><PARAM id="amp_release" value="4.0"/>
+  <PARAM id="filter_attack" value="2.5"/><PARAM id="filter_decay" value="1.5"/><PARAM id="filter_sustain" value="0.5"/><PARAM id="filter_release" value="3.0"/>
+  <PARAM id="lfo1_rate" value="0.1"/><PARAM id="lfo1_waveform" value="0"/><PARAM id="lfo2_rate" value="0.04"/><PARAM id="lfo2_waveform" value="1"/>
+  <PARAM id="orbit_shape" value="0"/><PARAM id="orbit_rate" value="0.08"/>
+  <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.45"/>
+  <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="7"/><PARAM id="mod_2_amt" value="0.35"/>
+  <PARAM id="mod_3_src" value="1"/><PARAM id="mod_3_dst" value="5"/><PARAM id="mod_3_amt" value="0.3"/>
+  <PARAM id="mod_4_src" value="2"/><PARAM id="mod_4_dst" value="6"/><PARAM id="mod_4_amt" value="0.2"/>
+  <PARAM id="mod_5_src" value="10"/><PARAM id="mod_5_dst" value="1"/><PARAM id="mod_5_amt" value="0.04"/>
+  <PARAM id="mod_6_src" value="11"/><PARAM id="mod_6_dst" value="2"/><PARAM id="mod_6_amt" value="-0.04"/>
+  <PARAM id="master_gain" value="-9"/>
+  <PARAM id="dist_enable" value="1"/><PARAM id="dist_drive" value="4.0"/><PARAM id="dist_mix" value="0.3"/>
+  <PARAM id="chorus_enable" value="0"/>
+  <PARAM id="delay_enable" value="0"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.97"/><PARAM id="reverb_damp" value="0.65"/><PARAM id="reverb_mix" value="0.45"/>
+  <PARAM id="ott_enable" value="1"/><PARAM id="ott_depth" value="0.4"/><PARAM id="ott_time" value="0.6"/><PARAM id="ott_mix" value="0.25"/>
+</Parameters>)" },
+
+            { "Prescient Dream", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Prescient Dream" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="1"/><PARAM id="osc1_level" value="0.5"/><PARAM id="osc1_detune" value="-12"/><PARAM id="osc1_octave" value="0"/>
+  <PARAM id="osc2_waveform" value="0"/><PARAM id="osc2_level" value="0.5"/><PARAM id="osc2_detune" value="12"/><PARAM id="osc2_octave" value="1"/>
+  <PARAM id="sub_level" value="0.35"/><PARAM id="sub_octave" value="-1"/>
+  <PARAM id="filter_cutoff" value="5000"/><PARAM id="filter_resonance" value="0.15"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.0"/><PARAM id="filter_env_amount" value="0.05"/>
+  <PARAM id="filter_mode" value="0"/>
+  <PARAM id="amp_attack" value="3.5"/><PARAM id="amp_decay" value="2.0"/><PARAM id="amp_sustain" value="0.7"/><PARAM id="amp_release" value="6.0"/>
+  <PARAM id="filter_attack" value="4.0"/><PARAM id="filter_decay" value="3.0"/><PARAM id="filter_sustain" value="0.4"/><PARAM id="filter_release" value="5.0"/>
+  <PARAM id="lfo1_rate" value="0.06"/><PARAM id="lfo1_waveform" value="0"/><PARAM id="lfo2_rate" value="0.1"/><PARAM id="lfo2_waveform" value="1"/>
+  <PARAM id="orbit_shape" value="6"/><PARAM id="orbit_rate" value="0.03"/>
+  <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="1"/><PARAM id="mod_1_amt" value="0.06"/>
+  <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="2"/><PARAM id="mod_2_amt" value="-0.06"/>
+  <PARAM id="mod_3_src" value="10"/><PARAM id="mod_3_dst" value="3"/><PARAM id="mod_3_amt" value="0.25"/>
+  <PARAM id="mod_4_src" value="11"/><PARAM id="mod_4_dst" value="4"/><PARAM id="mod_4_amt" value="-0.25"/>
+  <PARAM id="mod_5_src" value="1"/><PARAM id="mod_5_dst" value="6"/><PARAM id="mod_5_amt" value="0.15"/>
+  <PARAM id="mod_6_src" value="2"/><PARAM id="mod_6_dst" value="8"/><PARAM id="mod_6_amt" value="0.1"/>
+  <PARAM id="mod_7_src" value="4"/><PARAM id="mod_7_dst" value="9"/><PARAM id="mod_7_amt" value="0.2"/>
+  <PARAM id="master_gain" value="-6"/>
+  <PARAM id="dist_enable" value="0"/>
+  <PARAM id="chorus_enable" value="1"/><PARAM id="chorus_rate" value="0.05"/><PARAM id="chorus_depth" value="0.95"/><PARAM id="chorus_mix" value="0.5"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="750"/><PARAM id="delay_feedback" value="0.6"/><PARAM id="delay_mix" value="0.3"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.96"/><PARAM id="reverb_damp" value="0.2"/><PARAM id="reverb_mix" value="0.7"/>
+</Parameters>)" },
+
+            { "Bene Gesserit", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Bene Gesserit" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="2"/><PARAM id="osc1_level" value="0.65"/><PARAM id="osc1_detune" value="2"/><PARAM id="osc1_octave" value="0"/>
+  <PARAM id="osc2_waveform" value="1"/><PARAM id="osc2_level" value="0.55"/><PARAM id="osc2_detune" value="-2"/><PARAM id="osc2_octave" value="0"/>
+  <PARAM id="sub_level" value="0.25"/><PARAM id="sub_octave" value="-1"/>
+  <PARAM id="filter_cutoff" value="1800"/><PARAM id="filter_resonance" value="0.5"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.1"/><PARAM id="filter_env_amount" value="0.15"/>
+  <PARAM id="filter_mode" value="1"/><PARAM id="formant_vowel" value="1"/>
+  <PARAM id="amp_attack" value="1.2"/><PARAM id="amp_decay" value="0.8"/><PARAM id="amp_sustain" value="0.8"/><PARAM id="amp_release" value="3.5"/>
+  <PARAM id="filter_attack" value="1.5"/><PARAM id="filter_decay" value="1.0"/><PARAM id="filter_sustain" value="0.6"/><PARAM id="filter_release" value="3.0"/>
+  <PARAM id="lfo1_rate" value="0.2"/><PARAM id="lfo1_waveform" value="1"/><PARAM id="lfo2_rate" value="0.08"/><PARAM id="lfo2_waveform" value="0"/>
+  <PARAM id="orbit_shape" value="3"/><PARAM id="orbit_rate" value="0.15"/>
+  <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.5"/>
+  <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="3"/><PARAM id="mod_2_amt" value="0.3"/>
+  <PARAM id="mod_3_src" value="10"/><PARAM id="mod_3_dst" value="4"/><PARAM id="mod_3_amt" value="-0.3"/>
+  <PARAM id="mod_4_src" value="1"/><PARAM id="mod_4_dst" value="7"/><PARAM id="mod_4_amt" value="0.25"/>
+  <PARAM id="mod_5_src" value="2"/><PARAM id="mod_5_dst" value="5"/><PARAM id="mod_5_amt" value="0.2"/>
+  <PARAM id="mod_6_src" value="4"/><PARAM id="mod_6_dst" value="8"/><PARAM id="mod_6_amt" value="0.35"/>
+  <PARAM id="mod_7_src" value="11"/><PARAM id="mod_7_dst" value="10"/><PARAM id="mod_7_amt" value="0.25"/>
+  <PARAM id="master_gain" value="-5"/>
+  <PARAM id="dist_enable" value="0"/>
+  <PARAM id="chorus_enable" value="1"/><PARAM id="chorus_rate" value="0.18"/><PARAM id="chorus_depth" value="0.65"/><PARAM id="chorus_mix" value="0.4"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="550"/><PARAM id="delay_feedback" value="0.45"/><PARAM id="delay_mix" value="0.2"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.9"/><PARAM id="reverb_damp" value="0.35"/><PARAM id="reverb_mix" value="0.55"/>
+</Parameters>)" },
+
+            { "Holtzman Shield", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Holtzman Shield" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="3"/><PARAM id="osc1_level" value="0.9"/><PARAM id="osc1_detune" value="0"/><PARAM id="osc1_octave" value="0"/>
+  <PARAM id="osc2_waveform" value="3"/><PARAM id="osc2_level" value="0.7"/><PARAM id="osc2_detune" value="50"/><PARAM id="osc2_octave" value="1"/>
+  <PARAM id="sub_level" value="0.0"/><PARAM id="sub_octave" value="-1"/>
+  <PARAM id="filter_cutoff" value="3500"/><PARAM id="filter_resonance" value="0.85"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.35"/><PARAM id="filter_env_amount" value="0.6"/>
+  <PARAM id="filter_mode" value="2"/>
+  <PARAM id="amp_attack" value="0.001"/><PARAM id="amp_decay" value="0.15"/><PARAM id="amp_sustain" value="0.0"/><PARAM id="amp_release" value="2.0"/>
+  <PARAM id="filter_attack" value="0.001"/><PARAM id="filter_decay" value="0.3"/><PARAM id="filter_sustain" value="0.1"/><PARAM id="filter_release" value="1.5"/>
+  <PARAM id="lfo1_rate" value="12.0"/><PARAM id="lfo1_waveform" value="3"/><PARAM id="lfo2_rate" value="0.5"/><PARAM id="lfo2_waveform" value="2"/>
+  <PARAM id="orbit_shape" value="2"/><PARAM id="orbit_rate" value="3.5"/>
+  <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.6"/>
+  <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="7"/><PARAM id="mod_2_amt" value="0.5"/>
+  <PARAM id="mod_3_src" value="1"/><PARAM id="mod_3_dst" value="1"/><PARAM id="mod_3_amt" value="0.2"/>
+  <PARAM id="mod_4_src" value="10"/><PARAM id="mod_4_dst" value="3"/><PARAM id="mod_4_amt" value="0.4"/>
+  <PARAM id="mod_5_src" value="11"/><PARAM id="mod_5_dst" value="4"/><PARAM id="mod_5_amt" value="-0.4"/>
+  <PARAM id="mod_6_src" value="5"/><PARAM id="mod_6_dst" value="8"/><PARAM id="mod_6_amt" value="0.5"/>
+  <PARAM id="master_gain" value="-7"/>
+  <PARAM id="dist_enable" value="1"/><PARAM id="dist_drive" value="2.5"/><PARAM id="dist_mix" value="0.3"/>
+  <PARAM id="chorus_enable" value="0"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="180"/><PARAM id="delay_feedback" value="0.75"/><PARAM id="delay_mix" value="0.35"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.75"/><PARAM id="reverb_damp" value="0.3"/><PARAM id="reverb_mix" value="0.4"/>
+  <PARAM id="ott_enable" value="1"/><PARAM id="ott_depth" value="0.6"/><PARAM id="ott_time" value="0.3"/><PARAM id="ott_mix" value="0.35"/>
+</Parameters>)" },
+
+            { "Thumper Signal", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Thumper Signal" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="0"/><PARAM id="osc1_level" value="0.9"/><PARAM id="osc1_detune" value="0"/><PARAM id="osc1_octave" value="-2"/>
+  <PARAM id="osc2_waveform" value="3"/><PARAM id="osc2_level" value="0.4"/><PARAM id="osc2_detune" value="0"/><PARAM id="osc2_octave" value="-1"/>
+  <PARAM id="sub_level" value="0.95"/><PARAM id="sub_octave" value="-2"/>
+  <PARAM id="filter_cutoff" value="400"/><PARAM id="filter_resonance" value="0.6"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.6"/><PARAM id="filter_env_amount" value="0.8"/>
+  <PARAM id="filter_mode" value="0"/>
+  <PARAM id="amp_attack" value="0.001"/><PARAM id="amp_decay" value="0.25"/><PARAM id="amp_sustain" value="0.0"/><PARAM id="amp_release" value="0.8"/>
+  <PARAM id="filter_attack" value="0.001"/><PARAM id="filter_decay" value="0.2"/><PARAM id="filter_sustain" value="0.05"/><PARAM id="filter_release" value="0.5"/>
+  <PARAM id="lfo1_rate" value="4.0"/><PARAM id="lfo1_waveform" value="3"/><PARAM id="lfo2_rate" value="0.15"/><PARAM id="lfo2_waveform" value="2"/>
+  <PARAM id="orbit_shape" value="2"/><PARAM id="orbit_rate" value="0.8"/>
+  <PARAM id="mod_1_src" value="1"/><PARAM id="mod_1_dst" value="8"/><PARAM id="mod_1_amt" value="0.7"/>
+  <PARAM id="mod_2_src" value="8"/><PARAM id="mod_2_dst" value="6"/><PARAM id="mod_2_amt" value="0.3"/>
+  <PARAM id="mod_3_src" value="2"/><PARAM id="mod_3_dst" value="1"/><PARAM id="mod_3_amt" value="0.05"/>
+  <PARAM id="mod_4_src" value="5"/><PARAM id="mod_4_dst" value="6"/><PARAM id="mod_4_amt" value="0.4"/>
+  <PARAM id="mod_5_src" value="9"/><PARAM id="mod_5_dst" value="7"/><PARAM id="mod_5_amt" value="0.25"/>
+  <PARAM id="master_gain" value="-8"/>
+  <PARAM id="dist_enable" value="1"/><PARAM id="dist_drive" value="5.0"/><PARAM id="dist_mix" value="0.4"/>
+  <PARAM id="chorus_enable" value="0"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="250"/><PARAM id="delay_feedback" value="0.5"/><PARAM id="delay_mix" value="0.2"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.85"/><PARAM id="reverb_damp" value="0.7"/><PARAM id="reverb_mix" value="0.35"/>
 </Parameters>)" }
         };
         
