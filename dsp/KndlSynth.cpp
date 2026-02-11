@@ -111,30 +111,47 @@ void KndlSynth::handleMidiMessage(const juce::MidiMessage& message)
 
 float KndlSynth::processSample()
 {
+    // 1. Feed non-LFO sources into mod matrix (from previous sample state)
+    modMatrix.setSourceValue(ModSource::ModWheel, modWheelValue);
+    modMatrix.setSourceValue(ModSource::AmpEnv, debugInfo.ampEnvValue);
+    modMatrix.setSourceValue(ModSource::FilterEnv, debugInfo.filterEnvValue);
+    modMatrix.setSourceValue(ModSource::Velocity, voiceManager.getLastVelocity());
+    
+    // Feed Spellbook outputs (from previous process() call - Spellbook doesn't depend on LFO)
+    modMatrix.setSourceValue(ModSource::SpellbookA, spellbook.getOutput(0));
+    modMatrix.setSourceValue(ModSource::SpellbookB, spellbook.getOutput(1));
+    modMatrix.setSourceValue(ModSource::SpellbookC, spellbook.getOutput(2));
+    modMatrix.setSourceValue(ModSource::SpellbookD, spellbook.getOutput(3));
+    
+    // Feed LFO values from previous sample (so rate mod can affect THIS sample's LFO tick)
+    modMatrix.setSourceValue(ModSource::LFO1, lfo1.getCurrentValue());
+    modMatrix.setSourceValue(ModSource::LFO2, lfo2.getCurrentValue());
+    
+    // 2. Advance smoothers exactly once per sample
+    modMatrix.updateSmoothing();
+    
+    // 3. Apply LFO rate modulation BEFORE processing LFOs
+    float lfo1RateMod = modMatrix.getModulationAmount(ModDestination::LFO1Rate);
+    float lfo2RateMod = modMatrix.getModulationAmount(ModDestination::LFO2Rate);
+    if (std::abs(lfo1RateMod) > 0.001f)
+        lfo1.setRate(*lfo1RateParam + lfo1RateMod * 10.0f);
+    if (std::abs(lfo2RateMod) > 0.001f)
+        lfo2.setRate(*lfo2RateParam + lfo2RateMod * 10.0f);
+    
+    // 4. Now process LFOs with correct modulated rate
     float lfo1Value = lfo1.process();
     float lfo2Value = lfo2.process();
     
-    // Process Spellbook modulator
-    spellbook.process();
-    
+    // 5. Update LFO source values for next sample's mod matrix
     modMatrix.setSourceValue(ModSource::LFO1, lfo1Value);
     modMatrix.setSourceValue(ModSource::LFO2, lfo2Value);
-    modMatrix.setSourceValue(ModSource::ModWheel, modWheelValue);
     
-    // Feed Spellbook outputs
+    // 6. Process Spellbook modulator
+    spellbook.process();
     float sbA = spellbook.getOutput(0);
     float sbB = spellbook.getOutput(1);
     float sbC = spellbook.getOutput(2);
     float sbD = spellbook.getOutput(3);
-    modMatrix.setSourceValue(ModSource::SpellbookA, sbA);
-    modMatrix.setSourceValue(ModSource::SpellbookB, sbB);
-    modMatrix.setSourceValue(ModSource::SpellbookC, sbC);
-    modMatrix.setSourceValue(ModSource::SpellbookD, sbD);
-    
-    // Feed envelope and velocity sources from last active voice
-    modMatrix.setSourceValue(ModSource::AmpEnv, debugInfo.ampEnvValue);
-    modMatrix.setSourceValue(ModSource::FilterEnv, debugInfo.filterEnvValue);
-    modMatrix.setSourceValue(ModSource::Velocity, voiceManager.getLastVelocity());
     
     // Apply all modulation destinations
     float osc1PitchMod = modMatrix.getModulationAmount(ModDestination::Osc1Pitch);
@@ -148,14 +165,6 @@ float KndlSynth::processSample()
     voiceManager.setFilterCutoffMod(modMatrix.getModulationAmount(ModDestination::FilterCutoff));
     voiceManager.setFilterResoMod(modMatrix.getModulationAmount(ModDestination::FilterResonance));
     voiceManager.setAmpLevelMod(modMatrix.getModulationAmount(ModDestination::AmpLevel));
-    
-    // LFO rate modulation
-    float lfo1RateMod = modMatrix.getModulationAmount(ModDestination::LFO1Rate);
-    float lfo2RateMod = modMatrix.getModulationAmount(ModDestination::LFO2Rate);
-    if (std::abs(lfo1RateMod) > 0.001f)
-        lfo1.setRate(*lfo1RateParam + lfo1RateMod * 10.0f);
-    if (std::abs(lfo2RateMod) > 0.001f)
-        lfo2.setRate(*lfo2RateParam + lfo2RateMod * 10.0f);
     
     float output = voiceManager.process();
     
@@ -206,6 +215,13 @@ float KndlSynth::processSample()
     output = delay.process(output);
     output = reverb.process(output);
     output = ott.process(output);
+    
+    // NaN/Inf check after effects chain (critical: delay feedback can propagate NaN)
+    if (!std::isfinite(output))
+    {
+        Logger::getInstance().logAudioAnomaly("NaN/Inf after effects chain", output);
+        output = 0.0f;
+    }
     
     // Remove DC offset before gain stage
     output = dcBlockerL.process(output);

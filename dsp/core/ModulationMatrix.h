@@ -211,13 +211,12 @@ public:
     /**
      * Obtiene el valor modulado para un destino.
      * Suma todas las modulaciones activas al valor base.
+     * IMPORTANTE: Llamar updateSmoothing() UNA VEZ por sample antes de usar esto.
      */
-    float getModulatedValue(ModDestination dest)
+    float getModulatedValue(ModDestination dest) const
     {
         if (dest == ModDestination::None || dest == ModDestination::NumDestinations)
             return 0.0f;
-        
-        updateSmoothing();
         
         float baseValue = destinationBaseValues[static_cast<size_t>(dest)];
         float modulation = 0.0f;
@@ -239,11 +238,10 @@ public:
     
     /**
      * Obtiene solo la cantidad de modulación (sin valor base).
+     * IMPORTANTE: Llamar updateSmoothing() UNA VEZ por sample antes de usar esto.
      */
-    float getModulationAmount(ModDestination dest)
+    float getModulationAmount(ModDestination dest) const
     {
-        updateSmoothing();
-        
         float modulation = 0.0f;
         
         for (size_t i = 0; i < MaxConnections; ++i)
