@@ -76,6 +76,54 @@ namespace ParamID {
     inline constexpr const char* REVERB_SIZE = "reverb_size";
     inline constexpr const char* REVERB_DAMP = "reverb_damp";
     inline constexpr const char* REVERB_MIX = "reverb_mix";
+    
+    // OTT
+    inline constexpr const char* OTT_ENABLE = "ott_enable";
+    inline constexpr const char* OTT_DEPTH = "ott_depth";
+    inline constexpr const char* OTT_TIME = "ott_time";
+    inline constexpr const char* OTT_MIX = "ott_mix";
+    
+    // Advanced Filters
+    inline constexpr const char* FILTER_MODE = "filter_mode"; // SVF, Formant, Comb, Notch
+    inline constexpr const char* FORMANT_VOWEL = "formant_vowel";
+    
+    // Mod Matrix (8 slots)
+    inline constexpr const char* MOD_1_SRC = "mod_1_src";
+    inline constexpr const char* MOD_1_DST = "mod_1_dst";
+    inline constexpr const char* MOD_1_AMT = "mod_1_amt";
+    inline constexpr const char* MOD_2_SRC = "mod_2_src";
+    inline constexpr const char* MOD_2_DST = "mod_2_dst";
+    inline constexpr const char* MOD_2_AMT = "mod_2_amt";
+    inline constexpr const char* MOD_3_SRC = "mod_3_src";
+    inline constexpr const char* MOD_3_DST = "mod_3_dst";
+    inline constexpr const char* MOD_3_AMT = "mod_3_amt";
+    inline constexpr const char* MOD_4_SRC = "mod_4_src";
+    inline constexpr const char* MOD_4_DST = "mod_4_dst";
+    inline constexpr const char* MOD_4_AMT = "mod_4_amt";
+    inline constexpr const char* MOD_5_SRC = "mod_5_src";
+    inline constexpr const char* MOD_5_DST = "mod_5_dst";
+    inline constexpr const char* MOD_5_AMT = "mod_5_amt";
+    inline constexpr const char* MOD_6_SRC = "mod_6_src";
+    inline constexpr const char* MOD_6_DST = "mod_6_dst";
+    inline constexpr const char* MOD_6_AMT = "mod_6_amt";
+    inline constexpr const char* MOD_7_SRC = "mod_7_src";
+    inline constexpr const char* MOD_7_DST = "mod_7_dst";
+    inline constexpr const char* MOD_7_AMT = "mod_7_amt";
+    inline constexpr const char* MOD_8_SRC = "mod_8_src";
+    inline constexpr const char* MOD_8_DST = "mod_8_dst";
+    inline constexpr const char* MOD_8_AMT = "mod_8_amt";
+    
+    // Helper arrays for mod matrix
+    inline const char* const MOD_SRC_IDS[] = { MOD_1_SRC, MOD_2_SRC, MOD_3_SRC, MOD_4_SRC, MOD_5_SRC, MOD_6_SRC, MOD_7_SRC, MOD_8_SRC };
+    inline const char* const MOD_DST_IDS[] = { MOD_1_DST, MOD_2_DST, MOD_3_DST, MOD_4_DST, MOD_5_DST, MOD_6_DST, MOD_7_DST, MOD_8_DST };
+    inline const char* const MOD_AMT_IDS[] = { MOD_1_AMT, MOD_2_AMT, MOD_3_AMT, MOD_4_AMT, MOD_5_AMT, MOD_6_AMT, MOD_7_AMT, MOD_8_AMT };
+    inline constexpr int NUM_MOD_SLOTS = 8;
+    
+    // Spellbook
+    inline constexpr const char* SPELLBOOK_SHAPE = "spellbook_shape";
+    inline constexpr const char* SPELLBOOK_RATE = "spellbook_rate";
+    inline constexpr const char* SPELLBOOK_SYNC = "spellbook_sync";
+    inline constexpr const char* SPELLBOOK_NUM_OUTPUTS = "spellbook_num_outputs";
 }
 
 // Waveform types
@@ -86,11 +134,19 @@ enum class Waveform {
     Square
 };
 
-// Filter types
+// Filter types (SVF sub-types)
 enum class FilterType {
     LowPass = 0,
     HighPass,
     BandPass
+};
+
+// Filter modes (engine selection)
+enum class FilterMode {
+    SVF = 0,
+    Formant,
+    Comb,
+    Notch
 };
 
 // Crear el layout de parámetros para APVTS
@@ -383,6 +439,89 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
         "Reverb Mix",
         juce::NormalisableRange<float>(0.0f, 1.0f),
         0.3f
+    ));
+    
+    // === OTT ===
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID{ParamID::OTT_ENABLE, 1},
+        "OTT Enable",
+        false
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::OTT_DEPTH, 1},
+        "OTT Depth",
+        juce::NormalisableRange<float>(0.0f, 1.0f),
+        0.5f
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::OTT_TIME, 1},
+        "OTT Time",
+        juce::NormalisableRange<float>(0.1f, 100.0f, 0.0f, 0.5f),
+        10.0f
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::OTT_MIX, 1},
+        "OTT Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f),
+        0.5f
+    ));
+    
+    // === ADVANCED FILTERS ===
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID{ParamID::FILTER_MODE, 1},
+        "Filter Mode",
+        juce::StringArray{"SVF", "Formant", "Comb", "Notch"},
+        0
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterInt>(
+        juce::ParameterID{ParamID::FORMANT_VOWEL, 1},
+        "Formant Vowel",
+        0, 4, 0  // A, E, I, O, U
+    ));
+    
+    // === MODULATION MATRIX (8 slots) ===
+    juce::StringArray modSourceNames {"None", "LFO1", "LFO2", "AmpEnv", "FilterEnv", "Velocity", "ModWheel", "Aftertouch", "SB.A", "SB.B", "SB.C", "SB.D"};
+    juce::StringArray modDestNames {"None", "Osc1Pitch", "Osc2Pitch", "Osc1Level", "Osc2Level", "SubLevel", "FilterCutoff", "FilterReso", "AmpLevel", "LFO1Rate", "LFO2Rate"};
+    
+    for (int i = 0; i < ParamID::NUM_MOD_SLOTS; ++i)
+    {
+        params.push_back(std::make_unique<juce::AudioParameterChoice>(
+            juce::ParameterID{ParamID::MOD_SRC_IDS[i], 1},
+            "Mod " + juce::String(i + 1) + " Source",
+            modSourceNames, 0));
+        params.push_back(std::make_unique<juce::AudioParameterChoice>(
+            juce::ParameterID{ParamID::MOD_DST_IDS[i], 1},
+            "Mod " + juce::String(i + 1) + " Destination",
+            modDestNames, 0));
+        params.push_back(std::make_unique<juce::AudioParameterFloat>(
+            juce::ParameterID{ParamID::MOD_AMT_IDS[i], 1},
+            "Mod " + juce::String(i + 1) + " Amount",
+            juce::NormalisableRange<float>(-1.0f, 1.0f),
+            0.0f));
+    }
+    
+    // === SPELLBOOK ===
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID{ParamID::SPELLBOOK_SHAPE, 1},
+        "Spellbook Shape",
+        juce::StringArray{"Circle", "Triangle", "Square", "Pentagon", "Star", "Spiral", "Lemniscate"},
+        0
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::SPELLBOOK_RATE, 1},
+        "Spellbook Rate",
+        juce::NormalisableRange<float>(0.01f, 20000.0f, 0.0f, 0.3f),
+        1.0f
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID{ParamID::SPELLBOOK_SYNC, 1},
+        "Spellbook Sync",
+        false
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterInt>(
+        juce::ParameterID{ParamID::SPELLBOOK_NUM_OUTPUTS, 1},
+        "Spellbook Num Outputs",
+        1, 16, 8
     ));
     
     return { params.begin(), params.end() };

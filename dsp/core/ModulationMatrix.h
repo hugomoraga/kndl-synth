@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include <array>
 #include <functional>
+#include <cmath>
 
 namespace kndl {
 
@@ -19,6 +20,10 @@ enum class ModSource
     Velocity,
     ModWheel,
     Aftertouch,
+    SpellbookA,   // Spellbook output 0 (1st output X)
+    SpellbookB,   // Spellbook output 1 (1st output Y)
+    SpellbookC,   // Spellbook output 2 (2nd output X)
+    SpellbookD,   // Spellbook output 3 (2nd output Y)
     NumSources
 };
 
@@ -42,13 +47,28 @@ enum class ModDestination
 };
 
 /**
+ * Curvas de modulación disponibles.
+ */
+enum class ModCurve
+{
+    Linear = 0,
+    Exponential,
+    Logarithmic,
+    SCurve,
+    Sine,
+    NumCurves
+};
+
+/**
  * Una conexión de modulación.
  */
 struct ModConnection
 {
     ModSource source = ModSource::None;
     ModDestination destination = ModDestination::None;
-    float amount = 0.0f;  // -1 a 1
+    float amount = 0.0f;  // -1 a 1 (bipolar)
+    ModCurve curve = ModCurve::Linear;
+    float smoothingTime = 0.0f; // ms, 0 = no smoothing
     
     bool isActive() const { return source != ModSource::None && destination != ModDestination::None; }
 };
@@ -72,16 +92,34 @@ public:
         // Inicializar valores de fuentes
         sourceValues.fill(0.0f);
         destinationBaseValues.fill(0.0f);
+        smoothedAmounts.fill(0.0f);
+    }
+    
+    void prepare(double newSampleRate)
+    {
+        sampleRate = newSampleRate;
+        for (size_t i = 0; i < MaxConnections; ++i)
+        {
+            smoothers[i].reset(newSampleRate, 0.01); // Default 10ms
+        }
     }
     
     /**
      * Configura una conexión de modulación.
      */
-    void setConnection(int slot, ModSource source, ModDestination dest, float amount)
+    void setConnection(int slot, ModSource source, ModDestination dest, float amount, 
+                       ModCurve curve = ModCurve::Linear, float smoothingTime = 0.0f)
     {
         if (slot >= 0 && slot < MaxConnections)
         {
-            connections[static_cast<size_t>(slot)] = { source, dest, amount };
+            size_t idx = static_cast<size_t>(slot);
+            connections[idx] = { source, dest, amount, curve, smoothingTime };
+            
+            // Update smoother
+            if (smoothingTime > 0.0f)
+                smoothers[idx].reset(sampleRate, smoothingTime * 0.001);
+            else
+                smoothers[idx].setCurrentAndTargetValue(amount);
         }
     }
     
@@ -120,23 +158,79 @@ public:
     }
     
     /**
+     * Actualiza los smoothed values. Llamar cada sample.
+     */
+    void updateSmoothing()
+    {
+        for (size_t i = 0; i < MaxConnections; ++i)
+        {
+            if (connections[i].smoothingTime > 0.0f)
+            {
+                smoothedAmounts[i] = smoothers[i].getNextValue();
+            }
+            else
+            {
+                smoothedAmounts[i] = connections[i].amount;
+            }
+        }
+    }
+    
+    /**
+     * Aplica una curva a un valor de modulación.
+     */
+    float applyCurve(float value, ModCurve curve) const
+    {
+        switch (curve)
+        {
+            case ModCurve::Linear:
+                return value;
+                
+            case ModCurve::Exponential:
+                return value >= 0.0f ? value * value : -(value * value);
+                
+            case ModCurve::Logarithmic:
+                if (std::abs(value) < 0.001f) return 0.0f;
+                return value >= 0.0f ? std::log(1.0f + value * 9.0f) / std::log(10.0f) 
+                                     : -std::log(1.0f - value * 9.0f) / std::log(10.0f);
+                
+            case ModCurve::SCurve:
+            {
+                float x = juce::jlimit(-1.0f, 1.0f, value);
+                return x * x * (3.0f - 2.0f * std::abs(x));
+            }
+            
+            case ModCurve::Sine:
+                return std::sin(value * juce::MathConstants<float>::halfPi);
+                
+            case ModCurve::NumCurves:
+            default:
+                return value;
+        }
+    }
+    
+    /**
      * Obtiene el valor modulado para un destino.
      * Suma todas las modulaciones activas al valor base.
      */
-    float getModulatedValue(ModDestination dest) const
+    float getModulatedValue(ModDestination dest)
     {
         if (dest == ModDestination::None || dest == ModDestination::NumDestinations)
             return 0.0f;
         
+        updateSmoothing();
+        
         float baseValue = destinationBaseValues[static_cast<size_t>(dest)];
         float modulation = 0.0f;
         
-        for (const auto& conn : connections)
+        for (size_t i = 0; i < MaxConnections; ++i)
         {
+            const auto& conn = connections[i];
             if (conn.isActive() && conn.destination == dest)
             {
                 float sourceVal = sourceValues[static_cast<size_t>(conn.source)];
-                modulation += sourceVal * conn.amount;
+                float amount = smoothedAmounts[i];
+                float curved = applyCurve(sourceVal, conn.curve);
+                modulation += curved * amount;
             }
         }
         
@@ -146,16 +240,21 @@ public:
     /**
      * Obtiene solo la cantidad de modulación (sin valor base).
      */
-    float getModulationAmount(ModDestination dest) const
+    float getModulationAmount(ModDestination dest)
     {
+        updateSmoothing();
+        
         float modulation = 0.0f;
         
-        for (const auto& conn : connections)
+        for (size_t i = 0; i < MaxConnections; ++i)
         {
+            const auto& conn = connections[i];
             if (conn.isActive() && conn.destination == dest)
             {
                 float sourceVal = sourceValues[static_cast<size_t>(conn.source)];
-                modulation += sourceVal * conn.amount;
+                float amount = smoothedAmounts[i];
+                float curved = applyCurve(sourceVal, conn.curve);
+                modulation += curved * amount;
             }
         }
         
@@ -187,6 +286,11 @@ private:
     std::array<ModConnection, MaxConnections> connections;
     std::array<float, static_cast<size_t>(ModSource::NumSources)> sourceValues;
     std::array<float, static_cast<size_t>(ModDestination::NumDestinations)> destinationBaseValues;
+    
+    // Smoothing
+    std::array<juce::SmoothedValue<float>, MaxConnections> smoothers;
+    std::array<float, MaxConnections> smoothedAmounts;
+    double sampleRate = 44100.0;
 };
 
 } // namespace kndl

@@ -143,7 +143,7 @@ public:
         // Zoom label
         auto controlArea = bounds.removeFromBottom(controlHeight);
         g.setColour(theme->getTextMuted());
-        g.setFont(juce::Font(juce::FontOptions(9.0f)));
+        g.setFont(theme->getSmallFont());
         g.drawText("ZOOM", controlArea.removeFromLeft(35), juce::Justification::centredLeft);
         
         // Zoom value
@@ -212,6 +212,14 @@ public:
         lfo2Value = lfo2;
     }
     
+    void setSpellbookValues(float a, float b, float c, float d)
+    {
+        sbA = a;
+        sbB = b;
+        sbC = c;
+        sbD = d;
+    }
+    
     void setOutputLevel(float level)
     {
         outputLevel = level;
@@ -232,10 +240,11 @@ public:
         for (int y = 0; y < getHeight(); y += 2)
             g.drawHorizontalLine(y, 0.0f, static_cast<float>(getWidth()));
         
-        // Fonts
-        juce::Font monoFont(juce::FontOptions("Menlo", 10.0f, juce::Font::plain));
-        juce::Font monoSmall(juce::FontOptions("Menlo", 9.0f, juce::Font::plain));
-        juce::Font monoBold(juce::FontOptions("Menlo", 11.0f, juce::Font::bold));
+        // Fonts (usar Inconsolata del theme)
+        juce::Font monoFont = theme->getValueFont();
+        juce::Font monoSmall = theme->getSmallFont();
+        juce::Font monoBold = theme->getLabelFont();
+        monoBold.setStyleFlags(juce::Font::bold);
         
         int lineHeight = 13;
         int colWidth = bounds.getWidth() / 2 - 10;
@@ -367,6 +376,22 @@ public:
         drawBipolarCompact(g, x2, y2, "L1", lfo1Value, theme->getAccentTertiary(), colWidth - 10);
         y2 += lineHeight;
         drawBipolarCompact(g, x2, y2, "L2", lfo2Value, theme->getAccentSecondary(), colWidth - 10);
+        y2 += lineHeight + 6;
+        
+        // === SPELLBOOK ===
+        g.setColour(theme->getTextMuted());
+        g.setFont(monoSmall);
+        g.drawText("SB.OUTPUT", x2, y2, colWidth, lineHeight, juce::Justification::left);
+        y2 += lineHeight;
+        
+        g.setFont(monoFont);
+        drawBipolarCompact(g, x2, y2, "SA", sbA, theme->getAccentPrimary(), colWidth - 10);
+        y2 += lineHeight;
+        drawBipolarCompact(g, x2, y2, "SB", sbB, theme->getAccentSecondary(), colWidth - 10);
+        y2 += lineHeight;
+        drawBipolarCompact(g, x2, y2, "SC", sbC, theme->getAccentTertiary(), colWidth - 10);
+        y2 += lineHeight;
+        drawBipolarCompact(g, x2, y2, "SD", sbD, theme->getWarning(), colWidth - 10);
         y2 += lineHeight + 6;
         
         // === OUTPUT METER ===
@@ -547,7 +572,234 @@ private:
     float lfo1Value = 0.0f;
     float lfo2Value = 0.0f;
     
+    float sbA = 0.0f;
+    float sbB = 0.0f;
+    float sbC = 0.0f;
+    float sbD = 0.0f;
+    
     float outputLevel = 0.0f;
+};
+
+/**
+ * KndlSpellbookScope - Visualiza la forma del Spellbook como un XY scope estilo terminal.
+ * Dibuja la trayectoria completa de la forma geométrica y un punto brillante
+ * que indica la posición actual del modulador.
+ */
+class KndlSpellbookScope : public juce::Component
+{
+public:
+    void setTheme(const Theme* newTheme)
+    {
+        theme = newTheme;
+        repaint();
+    }
+    
+    void setCurrentXY(float x, float y)
+    {
+        currentX = x;
+        currentY = y;
+        
+        // Store trail
+        trailX[static_cast<size_t>(trailIndex)] = x;
+        trailY[static_cast<size_t>(trailIndex)] = y;
+        trailIndex = (trailIndex + 1) % TrailLength;
+    }
+    
+    void setShapeName(const juce::String& name) { shapeName = name; }
+    
+    void paint(juce::Graphics& g) override
+    {
+        if (!theme) return;
+        
+        auto bounds = getLocalBounds().toFloat();
+        
+        // Background
+        g.setColour(juce::Colour(0xff0a0a10));
+        g.fillRoundedRectangle(bounds, 4.0f);
+        
+        // Border
+        g.setColour(theme->getPanelBorder().withAlpha(0.4f));
+        g.drawRoundedRectangle(bounds.reduced(0.5f), 4.0f, 1.0f);
+        
+        // Title
+        g.setColour(theme->getAccentTertiary());
+        g.setFont(theme->getSmallFont());
+        g.drawText("SB.SHAPE", static_cast<int>(bounds.getX() + 4),
+                   static_cast<int>(bounds.getY() + 2), 70, 12, juce::Justification::left);
+        
+        // Shape name
+        g.setColour(theme->getTextMuted());
+        g.drawText(shapeName, static_cast<int>(bounds.getRight() - 64),
+                   static_cast<int>(bounds.getY() + 2), 60, 12, juce::Justification::right);
+        
+        // Plot area
+        auto plotArea = bounds.reduced(6.0f, 16.0f).withTrimmedTop(2.0f);
+        float cx = plotArea.getCentreX();
+        float cy = plotArea.getCentreY();
+        float scale = juce::jmin(plotArea.getWidth(), plotArea.getHeight()) * 0.42f;
+        
+        // Grid lines (crosshair)
+        g.setColour(theme->getPanelBorder().withAlpha(0.15f));
+        g.drawHorizontalLine(static_cast<int>(cy), plotArea.getX(), plotArea.getRight());
+        g.drawVerticalLine(static_cast<int>(cx), plotArea.getY(), plotArea.getBottom());
+        
+        // Dotted circle at unit radius
+        g.setColour(theme->getPanelBorder().withAlpha(0.1f));
+        g.drawEllipse(cx - scale, cy - scale, scale * 2.0f, scale * 2.0f, 0.5f);
+        
+        // Draw the full shape path (thin, ghostly)
+        {
+            juce::Path shapePath;
+            constexpr int numPoints = 200;
+            bool first = true;
+            for (int i = 0; i <= numPoints; ++i)
+            {
+                float phase = static_cast<float>(i) / static_cast<float>(numPoints);
+                float sx, sy;
+                generateShapePoint(phase, sx, sy);
+                
+                float px = cx + sx * scale;
+                float py = cy - sy * scale; // Y inverted for screen
+                
+                if (first) { shapePath.startNewSubPath(px, py); first = false; }
+                else shapePath.lineTo(px, py);
+            }
+            g.setColour(theme->getAccentTertiary().withAlpha(0.25f));
+            g.strokePath(shapePath, juce::PathStrokeType(1.0f));
+        }
+        
+        // Draw trail (fading dots showing recent positions)
+        for (int i = 0; i < TrailLength; ++i)
+        {
+            int idx = (trailIndex - 1 - i + TrailLength) % TrailLength;
+            float alpha = 0.5f * (1.0f - static_cast<float>(i) / static_cast<float>(TrailLength));
+            if (alpha <= 0.0f) break;
+            
+            float tx = cx + trailX[static_cast<size_t>(idx)] * scale;
+            float ty = cy - trailY[static_cast<size_t>(idx)] * scale;
+            
+            float dotSize = 2.0f + 2.0f * (1.0f - static_cast<float>(i) / static_cast<float>(TrailLength));
+            g.setColour(theme->getAccentPrimary().withAlpha(alpha));
+            g.fillEllipse(tx - dotSize * 0.5f, ty - dotSize * 0.5f, dotSize, dotSize);
+        }
+        
+        // Draw current position (bright dot with glow)
+        {
+            float px = cx + currentX * scale;
+            float py = cy - currentY * scale;
+            
+            // Glow
+            g.setColour(theme->getAccentPrimary().withAlpha(0.2f));
+            g.fillEllipse(px - 6.0f, py - 6.0f, 12.0f, 12.0f);
+            
+            // Core dot
+            g.setColour(theme->getAccentPrimary());
+            g.fillEllipse(px - 3.0f, py - 3.0f, 6.0f, 6.0f);
+            
+            // Bright center
+            g.setColour(juce::Colours::white.withAlpha(0.8f));
+            g.fillEllipse(px - 1.5f, py - 1.5f, 3.0f, 3.0f);
+        }
+        
+        // Corner decorations
+        g.setColour(theme->getAccentTertiary().withAlpha(0.3f));
+        int x0 = static_cast<int>(bounds.getX()), y0 = static_cast<int>(bounds.getY());
+        int w = static_cast<int>(bounds.getWidth()), h = static_cast<int>(bounds.getHeight());
+        g.fillRect(x0, y0, 2, 6);
+        g.fillRect(x0, y0, 6, 2);
+        g.fillRect(x0 + w - 2, y0, 2, 6);
+        g.fillRect(x0 + w - 6, y0, 6, 2);
+        g.fillRect(x0, y0 + h - 6, 2, 6);
+        g.fillRect(x0, y0 + h - 2, 6, 2);
+        g.fillRect(x0 + w - 2, y0 + h - 6, 2, 6);
+        g.fillRect(x0 + w - 6, y0 + h - 2, 6, 2);
+    }
+    
+private:
+    void generateShapePoint(float phase, float& x, float& y)
+    {
+        float angle = phase * 2.0f * juce::MathConstants<float>::pi;
+        
+        switch (currentShape)
+        {
+            case 0: // Circle
+                x = std::cos(angle);
+                y = std::sin(angle);
+                break;
+            case 1: // Triangle
+            {
+                float localAngle = std::fmod(angle, 2.0f * juce::MathConstants<float>::pi / 3.0f);
+                float r = 1.0f / std::cos(localAngle - juce::MathConstants<float>::pi / 6.0f);
+                r = juce::jlimit(-2.0f, 2.0f, r);
+                x = r * std::cos(angle);
+                y = r * std::sin(angle);
+                break;
+            }
+            case 2: // Square
+            {
+                float n = 100.0f;
+                float cosA = std::cos(angle);
+                float sinA = std::sin(angle);
+                x = (cosA >= 0 ? 1.0f : -1.0f) * std::pow(std::abs(cosA), 2.0f / n);
+                y = (sinA >= 0 ? 1.0f : -1.0f) * std::pow(std::abs(sinA), 2.0f / n);
+                break;
+            }
+            case 3: // Pentagon
+            {
+                float localAngle = std::fmod(angle, 2.0f * juce::MathConstants<float>::pi / 5.0f);
+                float r = 1.0f / std::cos(localAngle - juce::MathConstants<float>::pi / 5.0f);
+                r = juce::jlimit(-2.0f, 2.0f, r);
+                x = r * std::cos(angle);
+                y = r * std::sin(angle);
+                break;
+            }
+            case 4: // Star
+            {
+                float starAngle = angle * 2.5f;
+                float r = 0.5f + 0.5f * std::sin(starAngle * 2.0f);
+                x = r * std::cos(angle);
+                y = r * std::sin(angle);
+                break;
+            }
+            case 5: // Spiral
+            {
+                float r = phase;
+                x = r * std::cos(angle);
+                y = r * std::sin(angle);
+                break;
+            }
+            case 6: // Lemniscate
+            {
+                float cos2t = std::cos(2.0f * angle);
+                if (cos2t < 0.0f) { x = 0.0f; y = 0.0f; break; }
+                float r = std::sqrt(2.0f * cos2t);
+                x = r * std::cos(angle);
+                y = r * std::sin(angle);
+                break;
+            }
+            default:
+                x = std::cos(angle);
+                y = std::sin(angle);
+                break;
+        }
+        
+        // Clamp for safety
+        x = juce::jlimit(-1.5f, 1.5f, x);
+        y = juce::jlimit(-1.5f, 1.5f, y);
+    }
+    
+    const Theme* theme = nullptr;
+    float currentX = 0.0f;
+    float currentY = 0.0f;
+    juce::String shapeName = "Circle";
+    
+    static constexpr int TrailLength = 48;
+    std::array<float, TrailLength> trailX {};
+    std::array<float, TrailLength> trailY {};
+    int trailIndex = 0;
+    
+public:
+    int currentShape = 0; // Matches Spellbook::Shape enum
 };
 
 } // namespace kndl::ui

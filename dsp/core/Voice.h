@@ -4,6 +4,7 @@
 #include "../oscillators/BasicOscillator.h"
 #include "../oscillators/SubOscillator.h"
 #include "../filters/SVFFilter.h"
+#include "../filters/AdvancedFilters.h"
 #include "../modulators/Envelope.h"
 
 namespace kndl {
@@ -40,6 +41,7 @@ public:
     
     bool getIsActive() const { return isActive; }
     int getCurrentNote() const { return currentNote; }
+    float getVelocity() const { return velocity; }
     
     // Debug info
     const VoiceDebugInfo& getDebugInfo() const { return debugInfo; }
@@ -59,15 +61,26 @@ public:
     void setSubOctave(int oct);
     
     void setFilterCutoff(float freq) { baseCutoff = freq; }
-    void setFilterResonance(float res) { filter.setResonance(res); }
+    void setFilterResonance(float res) { filterResonance = res; filter.setResonance(res); }
     void setFilterType(FilterType type) { filter.setType(type); }
     void setFilterDrive(float drive) { filter.setDrive(drive); }
     void setFilterEnvAmount(float amount) { filterEnvAmount = amount; }
+    void setFilterMode(FilterMode mode) { filterMode = mode; }
+    void setFormantVowel(int vowel) { formantFilter.setFormantVowel(vowel); }
     
     void setAmpEnvelope(float a, float d, float s, float r) { ampEnvelope.setParameters(a, d, s, r); }
     void setFilterEnvelope(float a, float d, float s, float r) { filterEnvelope.setParameters(a, d, s, r); }
     
     void applyPitchMod(float semitones);
+    void applyOsc2PitchMod(float semitones);
+    
+    // Modulation offsets (set per-sample from ModulationMatrix)
+    void setFilterCutoffMod(float mod)  { filterCutoffMod = mod; }
+    void setFilterResoMod(float mod)    { filterResoMod = mod; }
+    void setOsc1LevelMod(float mod)     { osc1LevelMod = mod; }
+    void setOsc2LevelMod(float mod)     { osc2LevelMod = mod; }
+    void setSubLevelMod(float mod)      { subLevelMod = mod; }
+    void setAmpLevelMod(float mod)      { ampLevelMod = mod; }
     
 private:
     void updateOscillatorFrequencies();
@@ -79,8 +92,13 @@ private:
     BasicOscillator osc2;
     SubOscillator subOsc;
     
-    // Filtro
+    // Filtros
     SVFFilter filter;
+    FormantFilter formantFilter;
+    CombFilter combFilter;
+    NotchFilter notchFilter;
+    FilterMode filterMode = FilterMode::SVF;
+    float filterResonance = 0.0f;
     
     // Envelopes
     Envelope ampEnvelope;
@@ -109,6 +127,13 @@ private:
     
     // Modulación
     float pitchModulation = 0.0f;
+    float osc2PitchModulation = 0.0f;
+    float filterCutoffMod = 0.0f;
+    float filterResoMod = 0.0f;
+    float osc1LevelMod = 0.0f;
+    float osc2LevelMod = 0.0f;
+    float subLevelMod = 0.0f;
+    float ampLevelMod = 0.0f;
     
     // Debug info
     VoiceDebugInfo debugInfo;

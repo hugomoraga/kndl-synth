@@ -7,11 +7,13 @@
 #include "core/VoiceManager.h"
 #include "core/ModulationMatrix.h"
 #include "modulators/LFO.h"
+#include "modulators/Spellbook.h"
 #include "effects/Delay.h"
 #include "effects/Chorus.h"
 #include "effects/Distortion.h"
 #include "effects/Reverb.h"
 #include "effects/DCBlocker.h"
+#include "effects/OTT.h"
 
 namespace kndl {
 
@@ -30,6 +32,7 @@ struct DebugInfo
     float filterInput = 0.0f;
     float filterOutput = 0.0f;
     float filterCutoff = 0.0f;
+    float filterResonance = 0.0f;
     
     // Envelopes
     float ampEnvValue = 0.0f;
@@ -38,6 +41,12 @@ struct DebugInfo
     // LFOs
     float lfo1Value = 0.0f;
     float lfo2Value = 0.0f;
+    
+    // Spellbook
+    float spellbookA = 0.0f;
+    float spellbookB = 0.0f;
+    float spellbookC = 0.0f;
+    float spellbookD = 0.0f;
     
     // Output
     float voiceOutput = 0.0f;
@@ -66,6 +75,9 @@ public:
     // Debug info
     const DebugInfo& getDebugInfo() const { return debugInfo; }
     
+    // Modulation matrix access
+    ModulationMatrix& getModMatrix() { return modMatrix; }
+    
 private:
     float processSample();
     void cacheParameterPointers();
@@ -79,6 +91,7 @@ private:
     VoiceManager voiceManager;
     LFO lfo1;
     LFO lfo2;
+    Spellbook spellbook;
     ModulationMatrix modMatrix;
     
     juce::SmoothedValue<float> masterGain;
@@ -124,11 +137,27 @@ private:
     
     std::atomic<float>* masterGainParam = nullptr;
     
+    // Advanced filter params
+    std::atomic<float>* filterModeParam = nullptr;
+    std::atomic<float>* formantVowelParam = nullptr;
+    
+    // Spellbook params
+    std::atomic<float>* spellbookShapeParam = nullptr;
+    std::atomic<float>* spellbookRateParam = nullptr;
+    std::atomic<float>* spellbookSyncParam = nullptr;
+    std::atomic<float>* spellbookNumOutputsParam = nullptr;
+    
+    // Mod matrix params (8 slots × 3)
+    std::array<std::atomic<float>*, 8> modSrcParams {};
+    std::array<std::atomic<float>*, 8> modDstParams {};
+    std::array<std::atomic<float>*, 8> modAmtParams {};
+    
     // Effects
     Distortion distortion;
     Chorus chorus;
     Delay delay;
     Reverb reverb;
+    OTT ott;
     
     // DC Blocker (removes DC offset from output)
     DCBlocker dcBlockerL;
@@ -153,6 +182,11 @@ private:
     std::atomic<float>* reverbSizeParam = nullptr;
     std::atomic<float>* reverbDampParam = nullptr;
     std::atomic<float>* reverbMixParam = nullptr;
+    
+    std::atomic<float>* ottEnableParam = nullptr;
+    std::atomic<float>* ottDepthParam = nullptr;
+    std::atomic<float>* ottTimeParam = nullptr;
+    std::atomic<float>* ottMixParam = nullptr;
     
     // Debug info (updated each sample for display)
     DebugInfo debugInfo;

@@ -105,6 +105,14 @@ public:
     
     const VoiceDebugInfo& getDebugInfo() const { return lastActiveVoiceDebug; }
     
+    float getLastVelocity() const
+    {
+        for (const auto& voice : voices)
+            if (voice.getIsActive())
+                return voice.getVelocity();
+        return 0.0f;
+    }
+    
     // === Aplicar parámetros a todas las voces ===
     
     void setOsc1Waveform(Waveform wf) { for (auto& v : voices) v.setOsc1Waveform(wf); }
@@ -125,11 +133,20 @@ public:
     void setFilterType(FilterType type) { for (auto& v : voices) v.setFilterType(type); }
     void setFilterDrive(float drive) { for (auto& v : voices) v.setFilterDrive(drive); }
     void setFilterEnvAmount(float amount) { for (auto& v : voices) v.setFilterEnvAmount(amount); }
+    void setFilterMode(FilterMode mode) { for (auto& v : voices) v.setFilterMode(mode); }
+    void setFormantVowel(int vowel) { for (auto& v : voices) v.setFormantVowel(vowel); }
     
     void setAmpEnvelope(float a, float d, float s, float r) { for (auto& v : voices) v.setAmpEnvelope(a, d, s, r); }
     void setFilterEnvelope(float a, float d, float s, float r) { for (auto& v : voices) v.setFilterEnvelope(a, d, s, r); }
     
     void applyPitchMod(float semitones) { for (auto& v : voices) v.applyPitchMod(semitones); }
+    void applyOsc2PitchMod(float semitones) { for (auto& v : voices) v.applyOsc2PitchMod(semitones); }
+    void setFilterCutoffMod(float mod)  { for (auto& v : voices) v.setFilterCutoffMod(mod); }
+    void setFilterResoMod(float mod)    { for (auto& v : voices) v.setFilterResoMod(mod); }
+    void setOsc1LevelMod(float mod)     { for (auto& v : voices) v.setOsc1LevelMod(mod); }
+    void setOsc2LevelMod(float mod)     { for (auto& v : voices) v.setOsc2LevelMod(mod); }
+    void setSubLevelMod(float mod)      { for (auto& v : voices) v.setSubLevelMod(mod); }
+    void setAmpLevelMod(float mod)      { for (auto& v : voices) v.setAmpLevelMod(mod); }
     
 private:
     std::array<Voice, MaxVoices> voices;

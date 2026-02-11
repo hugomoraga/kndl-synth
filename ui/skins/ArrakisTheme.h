@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Theme.h"
+#include "FontManager.h"
 
 namespace kndl::ui {
 
@@ -159,30 +160,32 @@ public:
     }
     
     // === FUENTES ===
-    // Minimal, slightly engraved, elegant and futuristic
+    // Inconsolata - Terminal monospace font for retro-futuristic aesthetic
+    // https://fonts.google.com/specimen/Inconsolata
+    // Embedded via BinaryData (FontManager singleton)
     juce::Font getTitleFont() const override 
     { 
-        return juce::Font(juce::FontOptions("Avenir Next", 26.0f, juce::Font::bold));
+        return FontManager::getInstance().getBold(28.0f);
     }
     
     juce::Font getHeaderFont() const override 
     { 
-        return juce::Font(juce::FontOptions("Avenir Next", 14.0f, juce::Font::bold));
+        return FontManager::getInstance().getBold(14.0f);
     }
     
     juce::Font getLabelFont() const override 
     { 
-        return juce::Font(juce::FontOptions("Avenir Next", 11.0f, juce::Font::plain));
+        return FontManager::getInstance().getRegular(11.0f);
     }
     
     juce::Font getValueFont() const override 
     { 
-        return juce::Font(juce::FontOptions("Menlo", 10.0f, juce::Font::plain));
+        return FontManager::getInstance().getRegular(10.0f);
     }
     
     juce::Font getSmallFont() const override 
     { 
-        return juce::Font(juce::FontOptions("Avenir Next", 9.0f, juce::Font::plain));
+        return FontManager::getInstance().getRegular(9.0f);
     }
     
     // === DIMENSIONES ===

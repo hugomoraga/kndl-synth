@@ -25,6 +25,7 @@ void KndlSynthAudioProcessor::changeProgramName (int, const juce::String&) {}
 void KndlSynthAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     synth.prepare(sampleRate, samplesPerBlock);
+    sequencer.setSampleRate(sampleRate);
 }
 
 void KndlSynthAudioProcessor::releaseResources() {}
@@ -40,6 +41,9 @@ bool KndlSynthAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 void KndlSynthAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
+    
+    // Inject internal sequencer notes (before everything else)
+    sequencer.processBlock(midiMessages, buffer.getNumSamples());
     
     // Track MIDI activity
     for (const auto metadata : midiMessages)

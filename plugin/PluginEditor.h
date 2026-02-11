@@ -8,10 +8,13 @@
 #include "../ui/components/KndlSlider.h"
 #include "../ui/components/KndlPanel.h"
 #include "../ui/components/KndlScope.h"
+#include "../ui/components/KndlFilterDisplay.h"
+#include "../ui/components/KndlModMatrix.h"
 #include "../ui/components/KndlOscSection.h"
 #include "../ui/components/KndlEffectSection.h"
 #include "../ui/components/KndlPresetSelector.h"
 #include "../ui/layout/LayoutManager.h"
+#include "../ui/layout/Grid.h"
 #include "Logger.h"
 
 class KndlSynthAudioProcessorEditor final : public juce::AudioProcessorEditor,
@@ -29,6 +32,17 @@ private:
     void applyThemeToAllComponents();
     void drawBackground(juce::Graphics& g);
     void drawTopBar(juce::Graphics& g, juce::Rectangle<int> bounds);
+    
+
+    // Layout helpers (each positions internal controls of a section)
+    void layoutTopBar(juce::Rectangle<int> area);
+    void layoutSeqBar(juce::Rectangle<int> area);
+    void layoutFilter(juce::Rectangle<int> area);
+    void layoutAmpEnv(juce::Rectangle<int> area);
+    void layoutFilterEnv(juce::Rectangle<int> area);
+    void layoutModulators(juce::Rectangle<int> area);
+    void layoutEffects(juce::Rectangle<int> area);
+    void layoutMonitor(juce::Rectangle<int> area);
     
     KndlSynthAudioProcessor& audioProcessor;
     
@@ -49,12 +63,17 @@ private:
     kndl::ui::KndlPanel filterPanel { "FILTER" };
     kndl::ui::KndlPanel envPanel { "AMP" };
     kndl::ui::KndlPanel filterEnvPanel { "FLT ENV" };
-    kndl::ui::KndlPanel lfoPanel { "LFO" };
+    kndl::ui::KndlPanel lfoPanel { "MODULATORS" };
     kndl::ui::KndlPanel monitorPanel { "MONITOR" };
     
-    // Scope and data display
+    // Scope, filter display, spellbook scope and data display
     kndl::ui::KndlScope waveScope;
+    kndl::ui::KndlFilterDisplay filterDisplay;
+    kndl::ui::KndlSpellbookScope spellbookScope;
     kndl::ui::KndlDataDisplay dataDisplay;
+    
+    // Modulation matrix display (initialized in constructor)
+    std::unique_ptr<kndl::ui::KndlModMatrix> modMatrixDisplay;
     
     // Preset selector
     kndl::ui::KndlPresetSelector presetSelector;
@@ -77,9 +96,17 @@ private:
     kndl::ui::KndlSlider filterSustainSlider { "S" };
     kndl::ui::KndlSlider filterReleaseSlider { "R" };
     
-    // LFO controls
+    // LFO + Spellbook controls (shared MODULATORS panel)
     kndl::ui::KndlKnob lfo1RateKnob { "LFO1" };
     kndl::ui::KndlKnob lfo2RateKnob { "LFO2" };
+    juce::ComboBox lfo1WaveformSelector;
+    juce::ComboBox lfo2WaveformSelector;
+    kndl::ui::KndlKnob spellbookRateKnob { "SB.RT" };
+    juce::ComboBox spellbookShapeSelector;
+    
+    // Filter mode selector
+    juce::ComboBox filterModeSelector;
+    juce::ComboBox formantVowelSelector;
     
     // Master output
     kndl::ui::KndlKnob masterGainKnob { "MASTER" };
@@ -128,6 +155,16 @@ private:
     // LFO attachments
     std::unique_ptr<SliderAttachment> lfo1RateAttachment;
     std::unique_ptr<SliderAttachment> lfo2RateAttachment;
+    std::unique_ptr<ComboBoxAttachment> lfo1WaveformAttachment;
+    std::unique_ptr<ComboBoxAttachment> lfo2WaveformAttachment;
+    
+    // Spellbook attachments
+    std::unique_ptr<SliderAttachment> spellbookRateAttachment;
+    std::unique_ptr<ComboBoxAttachment> spellbookShapeAttachment;
+    
+    // Filter mode attachments
+    std::unique_ptr<ComboBoxAttachment> filterModeAttachment;
+    std::unique_ptr<ComboBoxAttachment> formantVowelAttachment;
     
     // Master gain attachment
     std::unique_ptr<SliderAttachment> masterGainAttachment;
@@ -137,6 +174,7 @@ private:
     kndl::ui::KndlEffectSection chorusSection { "CHORUS", {"RATE", "DPT", "MIX"} };
     kndl::ui::KndlEffectSection delaySection { "DELAY", {"TIME", "FB", "MIX"} };
     kndl::ui::KndlEffectSection reverbSection { "REVERB", {"SIZE", "DMP", "MIX"} };
+    kndl::ui::KndlEffectSection ottSection { "OTT", {"DEPTH", "TIME", "MIX"} };
     
     // Effect attachments
     using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
@@ -160,11 +198,23 @@ private:
     std::unique_ptr<SliderAttachment> reverbDampAttachment;
     std::unique_ptr<SliderAttachment> reverbMixAttachment;
     
+    std::unique_ptr<ButtonAttachment> ottEnableAttachment;
+    std::unique_ptr<SliderAttachment> ottDepthAttachment;
+    std::unique_ptr<SliderAttachment> ottTimeAttachment;
+    std::unique_ptr<SliderAttachment> ottMixAttachment;
+    
     // State
     kndl::DebugInfo cachedDebugInfo;
     int displayNote = -1;
     bool midiIndicatorOn = false;
     int midiIndicatorCountdown = 0;
+    
+    // Sequencer controls
+    juce::TextButton seqButton { "SEQ" };
+    juce::ComboBox seqPatternSelector;
+    juce::Slider seqTempoSlider;
+    juce::Slider seqOctaveSlider;
+    juce::Label seqTempoLabel;
     
     // Logging button
     juce::TextButton logButton { "LOG" };

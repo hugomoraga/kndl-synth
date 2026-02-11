@@ -55,10 +55,15 @@ target_sources(KndlSynth PRIVATE
     # Filters (header-only, small files)
     dsp/filters/Filter.h
     dsp/filters/SVFFilter.h
+    dsp/filters/AdvancedFilters.h
     
     # Modulators (header-only, small files)
     dsp/modulators/Envelope.h
     dsp/modulators/LFO.h
+    dsp/modulators/Spellbook.h
+    
+    # Sequencer
+    dsp/sequencer/InternalSequencer.h
     
     # Effects
     dsp/effects/Effect.h
@@ -67,18 +72,31 @@ target_sources(KndlSynth PRIVATE
     dsp/effects/Distortion.h
     dsp/effects/Reverb.h
     dsp/effects/DCBlocker.h
+    dsp/effects/OTT.h
     
     # UI System
     ui/skins/Theme.h
+    ui/skins/FontManager.h
     ui/skins/ArrakisTheme.h
     ui/components/KndlKnob.h
     ui/components/KndlSlider.h
     ui/components/KndlPanel.h
     ui/components/KndlScope.h
+    ui/components/KndlFilterDisplay.h
+    ui/components/KndlModMatrix.h
     ui/components/KndlOscSection.h
     ui/components/KndlEffectSection.h
     ui/components/KndlPresetSelector.h
     ui/layout/LayoutManager.h
+    ui/layout/Grid.h
+)
+
+juce_add_binary_data(KndlSynthFonts
+    HEADER_NAME "FontData.h"
+    NAMESPACE FontData
+    SOURCES
+        resources/fonts/Inconsolata-Regular.ttf
+        resources/fonts/Inconsolata-Bold.ttf
 )
 
 target_include_directories(KndlSynth PRIVATE
@@ -94,6 +112,7 @@ target_compile_definitions(KndlSynth PRIVATE
 target_link_libraries(KndlSynth PRIVATE
     juce::juce_audio_utils
     juce::juce_dsp
+    KndlSynthFonts
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags

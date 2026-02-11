@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 #include "../dsp/KndlSynth.h"
 #include "../dsp/core/Parameters.h"
+#include "../dsp/sequencer/InternalSequencer.h"
 #include "PresetManager.h"
 
 class KndlSynthAudioProcessor final : public juce::AudioProcessor
@@ -47,6 +48,7 @@ public:
     //==============================================================================
     juce::AudioProcessorValueTreeState& getAPVTS() { return apvts; }
     kndl::KndlSynth& getSynth() { return synth; }
+    kndl::ModulationMatrix& getModMatrix() { return synth.getModMatrix(); }
     kndl::PresetManager& getPresetManager() { return presetManager; }
     
     // Debug info
@@ -56,11 +58,15 @@ public:
     bool hasMidiActivity() const { return midiActivity.load(); }
     void clearMidiActivity() { midiActivity.store(false); }
     const kndl::DebugInfo& getDebugInfo() const { return synth.getDebugInfo(); }
+    
+    // Internal sequencer
+    kndl::InternalSequencer& getSequencer() { return sequencer; }
 
 private:
     juce::AudioProcessorValueTreeState apvts;
     kndl::KndlSynth synth;
     kndl::PresetManager presetManager;
+    kndl::InternalSequencer sequencer;
     
     // Debug state (atomic for thread safety)
     std::atomic<float> currentLevel { 0.0f };

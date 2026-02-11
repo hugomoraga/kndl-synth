@@ -48,22 +48,127 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     addAndMakeVisible(lfo1RateKnob);
     addAndMakeVisible(lfo2RateKnob);
     
+    // LFO waveform selectors
+    addAndMakeVisible(lfo1WaveformSelector);
+    lfo1WaveformSelector.addItem("SIN", 1);
+    lfo1WaveformSelector.addItem("TRI", 2);
+    lfo1WaveformSelector.addItem("SAW", 3);
+    lfo1WaveformSelector.addItem("SQR", 4);
+    lfo1WaveformSelector.setScrollWheelEnabled(false);
+    
+    addAndMakeVisible(lfo2WaveformSelector);
+    lfo2WaveformSelector.addItem("SIN", 1);
+    lfo2WaveformSelector.addItem("TRI", 2);
+    lfo2WaveformSelector.addItem("SAW", 3);
+    lfo2WaveformSelector.addItem("SQR", 4);
+    lfo2WaveformSelector.setScrollWheelEnabled(false);
+    
+    // Add Spellbook controls (inside modulators panel)
+    addAndMakeVisible(spellbookRateKnob);
+    addAndMakeVisible(spellbookShapeSelector);
+    spellbookShapeSelector.addItem("Circle", 1);
+    spellbookShapeSelector.addItem("Triangle", 2);
+    spellbookShapeSelector.addItem("Square", 3);
+    spellbookShapeSelector.addItem("Pentagon", 4);
+    spellbookShapeSelector.addItem("Star", 5);
+    spellbookShapeSelector.addItem("Spiral", 6);
+    spellbookShapeSelector.addItem("Lemniscate", 7);
+    spellbookShapeSelector.setScrollWheelEnabled(false);
+    
+    // Add filter mode selectors
+    addAndMakeVisible(filterModeSelector);
+    filterModeSelector.addItem("SVF", 1);
+    filterModeSelector.addItem("Formant", 2);
+    filterModeSelector.addItem("Comb", 3);
+    filterModeSelector.addItem("Notch", 4);
+    filterModeSelector.setScrollWheelEnabled(false);
+    
+    addAndMakeVisible(formantVowelSelector);
+    formantVowelSelector.addItem("A", 1);
+    formantVowelSelector.addItem("E", 2);
+    formantVowelSelector.addItem("I", 3);
+    formantVowelSelector.addItem("O", 4);
+    formantVowelSelector.addItem("U", 5);
+    formantVowelSelector.setScrollWheelEnabled(false);
+    
     // Add master gain knob
     addAndMakeVisible(masterGainKnob);
     
-    // Add scope and data display
+    // Add scope, filter display and data display
     addAndMakeVisible(waveScope);
+    addAndMakeVisible(filterDisplay);
+    addAndMakeVisible(spellbookScope);
     addAndMakeVisible(dataDisplay);
+    
+    // Add modulation matrix display
+    modMatrixDisplay = std::make_unique<kndl::ui::KndlModMatrix>(audioProcessor.getModMatrix());
+    addAndMakeVisible(*modMatrixDisplay);
+    modMatrixDisplay->connectToAPVTS(audioProcessor.getAPVTS());
     
     // Add effect sections
     addAndMakeVisible(distortionSection);
     addAndMakeVisible(chorusSection);
     addAndMakeVisible(delaySection);
     addAndMakeVisible(reverbSection);
+    addAndMakeVisible(ottSection);
     
     // Add preset selector
     addAndMakeVisible(presetSelector);
     presetSelector.setPresetManager(&audioProcessor.getPresetManager());
+    
+    // Add sequencer controls
+    addAndMakeVisible(seqButton);
+    seqButton.setClickingTogglesState(true);
+    seqButton.setToggleState(false, juce::dontSendNotification);
+    seqButton.onClick = [this]() {
+        bool enabled = seqButton.getToggleState();
+        audioProcessor.getSequencer().setEnabled(enabled);
+        seqButton.setButtonText(enabled ? "SEQ ON" : "SEQ");
+        seqPatternSelector.setVisible(enabled);
+        seqTempoSlider.setVisible(enabled);
+        seqOctaveSlider.setVisible(enabled);
+        seqTempoLabel.setVisible(enabled);
+        resized(); // Re-layout to show/hide sequencer bar
+    };
+    
+    addAndMakeVisible(seqPatternSelector);
+    for (int i = 0; i < static_cast<int>(kndl::InternalSequencer::Pattern::NumPatterns); ++i)
+    {
+        auto pattern = static_cast<kndl::InternalSequencer::Pattern>(i);
+        seqPatternSelector.addItem(kndl::InternalSequencer::getPatternName(pattern), i + 1);
+    }
+    seqPatternSelector.setSelectedId(static_cast<int>(kndl::InternalSequencer::Pattern::MinorArpeggio) + 1, juce::dontSendNotification);
+    seqPatternSelector.onChange = [this]() {
+        auto pattern = static_cast<kndl::InternalSequencer::Pattern>(seqPatternSelector.getSelectedId() - 1);
+        audioProcessor.getSequencer().setPattern(pattern);
+    };
+    seqPatternSelector.setVisible(false);
+    
+    addAndMakeVisible(seqTempoSlider);
+    seqTempoSlider.setRange(40.0, 300.0, 1.0);
+    seqTempoSlider.setValue(120.0, juce::dontSendNotification);
+    seqTempoSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    seqTempoSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 60, 20);
+    seqTempoSlider.setTextValueSuffix(" bpm");
+    seqTempoSlider.onValueChange = [this]() {
+        audioProcessor.getSequencer().setTempo(seqTempoSlider.getValue());
+    };
+    seqTempoSlider.setVisible(false);
+    
+    addAndMakeVisible(seqOctaveSlider);
+    seqOctaveSlider.setRange(1, 7, 1);
+    seqOctaveSlider.setValue(3, juce::dontSendNotification);
+    seqOctaveSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    seqOctaveSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 25, 20);
+    seqOctaveSlider.onValueChange = [this]() {
+        audioProcessor.getSequencer().setBaseOctave(static_cast<int>(seqOctaveSlider.getValue()));
+    };
+    seqOctaveSlider.setVisible(false);
+    
+    addAndMakeVisible(seqTempoLabel);
+    seqTempoLabel.setText("OCT", juce::dontSendNotification);
+    seqTempoLabel.setJustificationType(juce::Justification::centredRight);
+    seqTempoLabel.setVisible(false);
     
     // Add logging button
     addAndMakeVisible(logButton);
@@ -122,6 +227,16 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     // LFO attachments
     lfo1RateAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::LFO1_RATE, lfo1RateKnob);
     lfo2RateAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::LFO2_RATE, lfo2RateKnob);
+    lfo1WaveformAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::LFO1_WAVEFORM, lfo1WaveformSelector);
+    lfo2WaveformAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::LFO2_WAVEFORM, lfo2WaveformSelector);
+    
+    // Spellbook attachments
+    spellbookRateAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::SPELLBOOK_RATE, spellbookRateKnob);
+    spellbookShapeAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::SPELLBOOK_SHAPE, spellbookShapeSelector);
+    
+    // Filter mode attachments
+    filterModeAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::FILTER_MODE, filterModeSelector);
+    formantVowelAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::FORMANT_VOWEL, formantVowelSelector);
     
     // Master gain attachment
     masterGainAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::MASTER_GAIN, masterGainKnob);
@@ -145,6 +260,11 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     reverbSizeAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::REVERB_SIZE, reverbSection.getKnob(0));
     reverbDampAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::REVERB_DAMP, reverbSection.getKnob(1));
     reverbMixAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::REVERB_MIX, reverbSection.getKnob(2));
+    
+    ottEnableAttachment = std::make_unique<ButtonAttachment>(apvts, kndl::ParamID::OTT_ENABLE, ottSection.getEnableButton());
+    ottDepthAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OTT_DEPTH, ottSection.getKnob(0));
+    ottTimeAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OTT_TIME, ottSection.getKnob(1));
+    ottMixAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OTT_MIX, ottSection.getKnob(2));
     
     // Set size
     setSize (1000, 750);
@@ -194,21 +314,79 @@ void KndlSynthAudioProcessorEditor::applyThemeToAllComponents()
     lfo1RateKnob.setTheme(currentTheme);
     lfo2RateKnob.setTheme(currentTheme);
     
+    // Spellbook (inside modulators panel)
+    spellbookRateKnob.setTheme(currentTheme);
+    if (currentTheme)
+    {
+        for (auto* combo : { &lfo1WaveformSelector, &lfo2WaveformSelector, &spellbookShapeSelector })
+        {
+            combo->setColour(juce::ComboBox::backgroundColourId, currentTheme->getPanelBackground());
+            combo->setColour(juce::ComboBox::textColourId, currentTheme->getTextPrimary());
+            combo->setColour(juce::ComboBox::outlineColourId, currentTheme->getPanelBorder());
+            combo->setColour(juce::ComboBox::arrowColourId, currentTheme->getAccentTertiary());
+        }
+        
+        filterModeSelector.setColour(juce::ComboBox::backgroundColourId, currentTheme->getPanelBackground());
+        filterModeSelector.setColour(juce::ComboBox::textColourId, currentTheme->getTextPrimary());
+        filterModeSelector.setColour(juce::ComboBox::outlineColourId, currentTheme->getPanelBorder());
+        filterModeSelector.setColour(juce::ComboBox::arrowColourId, currentTheme->getAccentPrimary());
+        
+        formantVowelSelector.setColour(juce::ComboBox::backgroundColourId, currentTheme->getPanelBackground());
+        formantVowelSelector.setColour(juce::ComboBox::textColourId, currentTheme->getTextPrimary());
+        formantVowelSelector.setColour(juce::ComboBox::outlineColourId, currentTheme->getPanelBorder());
+        formantVowelSelector.setColour(juce::ComboBox::arrowColourId, currentTheme->getAccentPrimary());
+    }
+    
     // Master gain
     masterGainKnob.setTheme(currentTheme);
     
     // Scope and data display
     waveScope.setTheme(currentTheme);
+    filterDisplay.setTheme(currentTheme);
+    spellbookScope.setTheme(currentTheme);
     dataDisplay.setTheme(currentTheme);
+    
+    if (modMatrixDisplay)
+        modMatrixDisplay->setTheme(currentTheme);
     
     // Effect sections
     distortionSection.setTheme(currentTheme);
     chorusSection.setTheme(currentTheme);
     delaySection.setTheme(currentTheme);
     reverbSection.setTheme(currentTheme);
+    ottSection.setTheme(currentTheme);
     
     // Preset selector
     presetSelector.setTheme(currentTheme);
+    
+    // Sequencer controls
+    if (currentTheme)
+    {
+        seqButton.setColour(juce::TextButton::buttonColourId, currentTheme->getPanelBackground());
+        seqButton.setColour(juce::TextButton::buttonOnColourId, currentTheme->getAccentTertiary().withAlpha(0.3f));
+        seqButton.setColour(juce::TextButton::textColourOffId, currentTheme->getTextMuted());
+        seqButton.setColour(juce::TextButton::textColourOnId, currentTheme->getAccentTertiary());
+        
+        seqPatternSelector.setColour(juce::ComboBox::backgroundColourId, currentTheme->getPanelBackground());
+        seqPatternSelector.setColour(juce::ComboBox::textColourId, currentTheme->getTextPrimary());
+        seqPatternSelector.setColour(juce::ComboBox::outlineColourId, currentTheme->getPanelBorder());
+        seqPatternSelector.setColour(juce::ComboBox::arrowColourId, currentTheme->getAccentTertiary());
+        
+        seqTempoSlider.setColour(juce::Slider::backgroundColourId, currentTheme->getSliderTrack());
+        seqTempoSlider.setColour(juce::Slider::trackColourId, currentTheme->getAccentTertiary());
+        seqTempoSlider.setColour(juce::Slider::thumbColourId, currentTheme->getSliderThumb());
+        seqTempoSlider.setColour(juce::Slider::textBoxTextColourId, currentTheme->getTextSecondary());
+        seqTempoSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+        
+        seqOctaveSlider.setColour(juce::Slider::backgroundColourId, currentTheme->getSliderTrack());
+        seqOctaveSlider.setColour(juce::Slider::trackColourId, currentTheme->getAccentTertiary());
+        seqOctaveSlider.setColour(juce::Slider::thumbColourId, currentTheme->getSliderThumb());
+        seqOctaveSlider.setColour(juce::Slider::textBoxTextColourId, currentTheme->getTextSecondary());
+        seqOctaveSlider.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+        
+        seqTempoLabel.setColour(juce::Label::textColourId, currentTheme->getTextMuted());
+        seqTempoLabel.setFont(currentTheme->getSmallFont());
+    }
     
     // Log button
     if (currentTheme)
@@ -245,9 +423,35 @@ void KndlSynthAudioProcessorEditor::timerCallback()
     dataDisplay.setFilterValues(cachedDebugInfo.filterCutoff, cachedDebugInfo.filterOutput, cachedDebugInfo.filterEnvValue);
     dataDisplay.setEnvValues(cachedDebugInfo.ampEnvValue, cachedDebugInfo.filterEnvValue);
     dataDisplay.setLfoValues(cachedDebugInfo.lfo1Value, cachedDebugInfo.lfo2Value);
+    dataDisplay.setSpellbookValues(cachedDebugInfo.spellbookA, cachedDebugInfo.spellbookB,
+                                   cachedDebugInfo.spellbookC, cachedDebugInfo.spellbookD);
+    
+    // Feed Spellbook scope (A=X, B=Y of first output pair)
+    spellbookScope.setCurrentXY(cachedDebugInfo.spellbookA, cachedDebugInfo.spellbookB);
+    // Update shape name from the combo box
+    spellbookScope.currentShape = spellbookShapeSelector.getSelectedItemIndex();
+    spellbookScope.setShapeName(spellbookShapeSelector.getText());
+    spellbookScope.repaint();
+    
     dataDisplay.setOutputLevel(cachedDebugInfo.masterOutput);
     
     waveScope.pushSample(cachedDebugInfo.masterOutput);
+    
+    // Update filter display with mode awareness
+    auto& apvts = audioProcessor.getAPVTS();
+    int filterType = static_cast<int>(*apvts.getRawParameterValue(kndl::ParamID::FILTER_TYPE));
+    int filterMode = static_cast<int>(*apvts.getRawParameterValue(kndl::ParamID::FILTER_MODE));
+    int formantVowel = static_cast<int>(*apvts.getRawParameterValue(kndl::ParamID::FORMANT_VOWEL));
+    filterDisplay.updateFilterResponse(
+        cachedDebugInfo.filterCutoff,
+        cachedDebugInfo.filterResonance,
+        filterType,
+        filterMode,
+        formantVowel
+    );
+    
+    // Only show vowel selector when filter mode is Formant (mode 1)
+    formantVowelSelector.setVisible(filterMode == 1);
     
     repaint();
 }
@@ -334,172 +538,266 @@ void KndlSynthAudioProcessorEditor::paint (juce::Graphics& g)
 {
     drawBackground(g);
     drawTopBar(g, layoutBounds.topBar);
+    
+    // Draw sequencer bar background when active
+    if (audioProcessor.getSequencer().isEnabled())
+    {
+        auto seqBarArea = juce::Rectangle<int>(
+            layoutBounds.topBar.getX(),
+            layoutBounds.topBar.getBottom() + 6,
+            layoutBounds.topBar.getWidth(),
+            28
+        );
+        
+        g.setColour(currentTheme->getPanelBackground().withAlpha(0.6f));
+        g.fillRoundedRectangle(seqBarArea.toFloat(), 4.0f);
+        g.setColour(currentTheme->getAccentTertiary().withAlpha(0.3f));
+        g.drawRoundedRectangle(seqBarArea.toFloat(), 4.0f, 1.0f);
+    }
 }
 
 void KndlSynthAudioProcessorEditor::resized()
 {
-    auto bounds = getLocalBounds();
-    const int margin = 10;
-    const int gap = 6;
+    using namespace kndl::ui;
+    auto g = KndlGrid(getLocalBounds().reduced(10), 6);
     
-    auto workArea = bounds.reduced(margin);
+    // === MAIN VERTICAL STRUCTURE ===
+    auto main = audioProcessor.getSequencer().isEnabled()
+        ? g.rows({ px(64), px(28), fr(65), fr(35) })
+        : g.rows({ px(64), fr(65), fr(35) });
     
-    // === TOP BAR (50px) ===
-    auto topBar = workArea.removeFromTop(50);
-    workArea.removeFromTop(gap);
-    layoutBounds.topBar = topBar;
+    int row = 0;
+    layoutBounds.topBar = main[row];
+    layoutTopBar(main[row++]);
     
-    // Preset selector in top bar (after title area)
-    auto presetArea = topBar;
-    presetArea.removeFromLeft(80);  // Space for title
-    presetArea = presetArea.removeFromLeft(220);  // Width for preset selector
+    if (audioProcessor.getSequencer().isEnabled())
+        layoutSeqBar(main[row++]);
+    
+    auto middle = main[row++];
+    auto bottom = main[row++];
+    
+    // === MIDDLE: 3 columns (osc | filter+modulators | right) ===
+    auto mid = KndlGrid(middle, 6).cols({ 3, 4, 5 });
+    
+    // Oscillators: 3 equal rows
+    auto oscs = mid.sub(0).equalRows(3);
+    osc1Section.setBounds(oscs[0]);
+    osc2Section.setBounds(oscs[1]);
+    subSection.setBounds(oscs[2]);
+    
+    // Center column: Filter on top, Modulators below
+    auto center = mid.sub(1).rows({ fr(80), fr(20) });
+    layoutFilter(center[0]);
+    layoutModulators(center[1]);
+    
+    // Right column: envelopes side by side + mod matrix below
+    auto right = mid.sub(2).rows({ fr(40), fr(60) });
+    auto envs = KndlGrid(right[0], 6).equalCols(2);
+    layoutAmpEnv(envs[0]);
+    layoutFilterEnv(envs[1]);
+    if (modMatrixDisplay)
+        modMatrixDisplay->setBounds(right[1].reduced(4));
+    
+    // === BOTTOM: effects + monitor ===
+    auto bot = KndlGrid(bottom, 6).cols({ 3, 9 });
+    layoutEffects(bot[0]);
+    layoutMonitor(bot[1]);
+}
+
+// =============================================================================
+// Layout Helpers
+// =============================================================================
+
+void KndlSynthAudioProcessorEditor::layoutTopBar(juce::Rectangle<int> area)
+{
+    // Preset selector (after title)
+    auto presetArea = area;
+    presetArea.removeFromLeft(80);
+    presetArea = presetArea.removeFromLeft(220);
     presetSelector.setBounds(presetArea.reduced(4, 10));
     
-    // Master gain knob (right side of top bar, before log button)
-    int masterKnobSize = 50;
-    int masterKnobHeight = masterKnobSize + 14;
-    masterGainKnob.setBounds(topBar.getRight() - 190, topBar.getY() + (topBar.getHeight() - masterKnobHeight) / 2, masterKnobSize, masterKnobHeight);
+    // Master gain knob
+    int knobSize = 50;
+    int knobH = knobSize + 14;
+    masterGainKnob.setBounds(area.getRight() - 250,
+        area.getY() + (area.getHeight() - knobH) / 2, knobSize, knobH);
     
-    // Log button (right side of top bar)
-    logButton.setBounds(topBar.getRight() - 70, topBar.getY() + 12, 55, 26);
+    // SEQ + LOG buttons
+    seqButton.setBounds(area.getRight() - 130, area.getY() + 12, 50, 26);
+    logButton.setBounds(area.getRight() - 70, area.getY() + 12, 55, 26);
     
-    // Macro knobs in top bar (after title/preset area)
-    auto macroArea = topBar;
-    macroArea.removeFromLeft(310);  // Title + preset selector
-    macroArea.removeFromRight(180); // Space for status + log button
+    // Macro knobs (fill space between preset and master)
+    auto macroArea = area;
+    macroArea.removeFromLeft(310);
+    macroArea.removeFromRight(250);
     
-    int macroKnobSize = 55;
-    int macroKnobHeight = macroKnobSize + 14;
-    int macroSpacing = (macroArea.getWidth() - macroKnobSize * 6) / 7;
-    int macroY = macroArea.getY() + (macroArea.getHeight() - macroKnobHeight) / 2;
+    int macroSize = 55;
+    int macroH = macroSize + 14;
+    int spacing = (macroArea.getWidth() - macroSize * 6) / 7;
+    int macroY = macroArea.getY() + (macroArea.getHeight() - macroH) / 2;
     
     for (size_t i = 0; i < macroKnobs.size(); ++i)
     {
-        int x = macroArea.getX() + macroSpacing + static_cast<int>(i) * (macroKnobSize + macroSpacing);
-        macroKnobs[i].setBounds(x, macroY, macroKnobSize, macroKnobHeight);
+        int x = macroArea.getX() + spacing + static_cast<int>(i) * (macroSize + spacing);
+        macroKnobs[i].setBounds(x, macroY, macroSize, macroH);
+    }
+}
+
+void KndlSynthAudioProcessorEditor::layoutSeqBar(juce::Rectangle<int> area)
+{
+    int x = area.getX() + 10;
+    int y = area.getY() + 2;
+    int h = 24;
+    
+    seqPatternSelector.setBounds(x, y, 110, h);
+    x += 118;
+    seqTempoSlider.setBounds(x, y, 200, h);
+    x += 208;
+    seqTempoLabel.setBounds(x, y, 28, h);
+    x += 30;
+    seqOctaveSlider.setBounds(x, y, 80, h);
+}
+
+void KndlSynthAudioProcessorEditor::layoutFilter(juce::Rectangle<int> area)
+{
+    filterPanel.setBounds(area);
+    
+    // Mode selectors at top
+    int selY = area.getY() + 28;
+    int modeW = 90, vowelW = 60, selH = 24, gap = 6;
+    int totalW = modeW + gap + vowelW;
+    int cx = area.getX() + (area.getWidth() - totalW) / 2;
+    filterModeSelector.setBounds(cx, selY, modeW, selH);
+    formantVowelSelector.setBounds(cx + modeW + gap, selY, vowelW, selH);
+    
+    // Knobs centered below selectors
+    int knobSize = 56, knobH = knobSize + 16, knobGap = 12;
+    int totalKnobW = knobSize * 4 + knobGap * 3;
+    int startX = area.getX() + (area.getWidth() - totalKnobW) / 2;
+    int knobY = area.getY() + selH + 36
+        + (area.getHeight() - selH - 36 - knobH) / 2;
+    
+    filterCutoffKnob.setBounds(startX, knobY, knobSize, knobH);
+    filterResoKnob.setBounds(startX + (knobSize + knobGap), knobY, knobSize, knobH);
+    filterDriveKnob.setBounds(startX + (knobSize + knobGap) * 2, knobY, knobSize, knobH);
+    filterEnvKnob.setBounds(startX + (knobSize + knobGap) * 3, knobY, knobSize, knobH);
+}
+
+void KndlSynthAudioProcessorEditor::layoutAmpEnv(juce::Rectangle<int> area)
+{
+    envPanel.setBounds(area);
+    
+    int sw = 26, sg = 6, sh = area.getHeight() - 45;
+    int totalW = sw * 4 + sg * 3;
+    int sx = area.getX() + (area.getWidth() - totalW) / 2;
+    int sy = area.getY() + 32;
+    
+    ampAttackSlider.setBounds(sx, sy, sw, sh);
+    ampDecaySlider.setBounds(sx + (sw + sg), sy, sw, sh);
+    ampSustainSlider.setBounds(sx + (sw + sg) * 2, sy, sw, sh);
+    ampReleaseSlider.setBounds(sx + (sw + sg) * 3, sy, sw, sh);
+}
+
+void KndlSynthAudioProcessorEditor::layoutFilterEnv(juce::Rectangle<int> area)
+{
+    filterEnvPanel.setBounds(area);
+    
+    int sw = 26, sg = 6, sh = area.getHeight() - 45;
+    int totalW = sw * 4 + sg * 3;
+    int sx = area.getX() + (area.getWidth() - totalW) / 2;
+    int sy = area.getY() + 32;
+    
+    filterAttackSlider.setBounds(sx, sy, sw, sh);
+    filterDecaySlider.setBounds(sx + (sw + sg), sy, sw, sh);
+    filterSustainSlider.setBounds(sx + (sw + sg) * 2, sy, sw, sh);
+    filterReleaseSlider.setBounds(sx + (sw + sg) * 3, sy, sw, sh);
+}
+
+void KndlSynthAudioProcessorEditor::layoutModulators(juce::Rectangle<int> area)
+{
+    using namespace kndl::ui;
+    lfoPanel.setBounds(area);
+    
+    // Content area after panel header
+    auto content = juce::Rectangle<int>(
+        area.getX() + 6, area.getY() + 22,
+        area.getWidth() - 12, area.getHeight() - 26);
+    
+    // 4 columns: LFO1 | LFO2 | SB Shape | SB Rate
+    auto cols = KndlGrid(content, 4).equalCols(4);
+    
+    // LFO1: knob on top, waveform selector below
+    {
+        auto c = cols[0];
+        int knobSize = juce::jmin(38, c.getWidth() - 4);
+        int knobH = knobSize + 12;
+        int selH = 18;
+        int totalH = knobH + 2 + selH;
+        int startY = c.getY() + (c.getHeight() - totalH) / 2;
+        int cx = c.getX() + (c.getWidth() - knobSize) / 2;
+        lfo1RateKnob.setBounds(cx, startY, knobSize, knobH);
+        int selW = juce::jmin(knobSize + 8, c.getWidth());
+        lfo1WaveformSelector.setBounds(c.getX() + (c.getWidth() - selW) / 2, startY + knobH + 2, selW, selH);
     }
     
-    // === BOTTOM (Monitor + Effects) ===
-    int bottomHeight = workArea.getHeight() * 38 / 100;
-    auto bottomArea = workArea.removeFromBottom(bottomHeight);
-    workArea.removeFromBottom(gap);
+    // LFO2: same layout
+    {
+        auto c = cols[1];
+        int knobSize = juce::jmin(38, c.getWidth() - 4);
+        int knobH = knobSize + 12;
+        int selH = 18;
+        int totalH = knobH + 2 + selH;
+        int startY = c.getY() + (c.getHeight() - totalH) / 2;
+        int cx = c.getX() + (c.getWidth() - knobSize) / 2;
+        lfo2RateKnob.setBounds(cx, startY, knobSize, knobH);
+        int selW = juce::jmin(knobSize + 8, c.getWidth());
+        lfo2WaveformSelector.setBounds(c.getX() + (c.getWidth() - selW) / 2, startY + knobH + 2, selW, selH);
+    }
     
-    // Split bottom into effects (left) and monitor (right)
-    int effectsWidth = bottomArea.getWidth() * 28 / 100;
-    auto effectsArea = bottomArea.removeFromLeft(effectsWidth);
-    bottomArea.removeFromLeft(gap);
+    // Spellbook shape selector (centered vertically)
+    {
+        auto c = cols[2];
+        int selH = 20;
+        int selW = c.getWidth() - 4;
+        spellbookShapeSelector.setBounds(c.getX() + 2, c.getY() + (c.getHeight() - selH) / 2, selW, selH);
+    }
     
-    // Effects - 4 stacked sections
-    int effectHeight = (effectsArea.getHeight() - gap * 3) / 4;
+    // Spellbook rate knob
+    {
+        auto c = cols[3];
+        int knobSize = juce::jmin(38, c.getWidth() - 4);
+        int knobH = knobSize + 12;
+        int cx = c.getX() + (c.getWidth() - knobSize) / 2;
+        int cy = c.getY() + (c.getHeight() - knobH) / 2;
+        spellbookRateKnob.setBounds(cx, cy, knobSize, knobH);
+    }
+}
+
+void KndlSynthAudioProcessorEditor::layoutEffects(juce::Rectangle<int> area)
+{
+    using namespace kndl::ui;
+    auto fx = KndlGrid(area, 6).equalRows(5);
     
-    distortionSection.setBounds(effectsArea.removeFromTop(effectHeight));
-    effectsArea.removeFromTop(gap);
-    chorusSection.setBounds(effectsArea.removeFromTop(effectHeight));
-    effectsArea.removeFromTop(gap);
-    delaySection.setBounds(effectsArea.removeFromTop(effectHeight));
-    effectsArea.removeFromTop(gap);
-    reverbSection.setBounds(effectsArea);
+    distortionSection.setBounds(fx[0]);
+    chorusSection.setBounds(fx[1]);
+    delaySection.setBounds(fx[2]);
+    reverbSection.setBounds(fx[3]);
+    ottSection.setBounds(fx[4]);
+}
+
+void KndlSynthAudioProcessorEditor::layoutMonitor(juce::Rectangle<int> area)
+{
+    using namespace kndl::ui;
+    monitorPanel.setBounds(area);
     
-    // Monitor panel
-    monitorPanel.setBounds(bottomArea);
+    // Content inside the panel (after header, with padding)
+    auto content = juce::Rectangle<int>(
+        area.getX() + 10, area.getY() + 28,
+        area.getWidth() - 20, area.getHeight() - 36);
     
-    auto monitorContent = juce::Rectangle<int>(
-        bottomArea.getX() + 10,
-        bottomArea.getY() + 28,
-        bottomArea.getWidth() - 20,
-        bottomArea.getHeight() - 36
-    );
-    
-    int scopeWidth = monitorContent.getWidth() * 40 / 100;
-    waveScope.setBounds(monitorContent.removeFromLeft(scopeWidth).reduced(2));
-    monitorContent.removeFromLeft(8);
-    dataDisplay.setBounds(monitorContent.reduced(2));
-    
-    // === MIDDLE SECTION ===
-    // Left column: Oscillators (3 stacked)
-    // Center: Filter
-    // Right: Envelopes + LFO
-    
-    int leftWidth = workArea.getWidth() * 22 / 100;
-    int rightWidth = workArea.getWidth() * 30 / 100;
-    
-    auto leftArea = workArea.removeFromLeft(leftWidth);
-    workArea.removeFromLeft(gap);
-    auto rightArea = workArea.removeFromRight(rightWidth);
-    workArea.removeFromRight(gap);
-    auto centerArea = workArea;
-    
-    // === LEFT: Oscillators (stacked vertically) ===
-    int oscHeight = (leftArea.getHeight() - gap * 2) / 3;
-    
-    osc1Section.setBounds(leftArea.removeFromTop(oscHeight));
-    leftArea.removeFromTop(gap);
-    osc2Section.setBounds(leftArea.removeFromTop(oscHeight));
-    leftArea.removeFromTop(gap);
-    subSection.setBounds(leftArea);
-    
-    // === CENTER: Filter ===
-    filterPanel.setBounds(centerArea);
-    
-    int filterKnobSize = 60;
-    int filterKnobHeight = filterKnobSize + 16;
-    int filterGap = 14;
-    
-    int totalFilterWidth = filterKnobSize * 4 + filterGap * 3;
-    int filterStartX = centerArea.getX() + (centerArea.getWidth() - totalFilterWidth) / 2;
-    int filterY = centerArea.getY() + (centerArea.getHeight() - filterKnobHeight) / 2;
-    
-    filterCutoffKnob.setBounds(filterStartX, filterY, filterKnobSize, filterKnobHeight);
-    filterResoKnob.setBounds(filterStartX + filterKnobSize + filterGap, filterY, filterKnobSize, filterKnobHeight);
-    filterDriveKnob.setBounds(filterStartX + (filterKnobSize + filterGap) * 2, filterY, filterKnobSize, filterKnobHeight);
-    filterEnvKnob.setBounds(filterStartX + (filterKnobSize + filterGap) * 3, filterY, filterKnobSize, filterKnobHeight);
-    
-    // === RIGHT: Envelopes + LFO ===
-    int envHeight = (rightArea.getHeight() - gap * 2) * 40 / 100;
-    
-    auto ampEnvArea = rightArea.removeFromTop(envHeight);
-    rightArea.removeFromTop(gap);
-    auto filterEnvArea = rightArea.removeFromTop(envHeight);
-    rightArea.removeFromTop(gap);
-    auto lfoArea = rightArea;
-    
-    envPanel.setBounds(ampEnvArea);
-    filterEnvPanel.setBounds(filterEnvArea);
-    lfoPanel.setBounds(lfoArea);
-    
-    // Amp ADSR sliders
-    int sliderWidth = 26;
-    int sliderGap = 6;
-    int sliderHeight = ampEnvArea.getHeight() - 45;
-    
-    int totalSliderWidth = sliderWidth * 4 + sliderGap * 3;
-    int sliderStartX = ampEnvArea.getX() + (ampEnvArea.getWidth() - totalSliderWidth) / 2;
-    int sliderY = ampEnvArea.getY() + 32;
-    
-    ampAttackSlider.setBounds(sliderStartX, sliderY, sliderWidth, sliderHeight);
-    ampDecaySlider.setBounds(sliderStartX + sliderWidth + sliderGap, sliderY, sliderWidth, sliderHeight);
-    ampSustainSlider.setBounds(sliderStartX + (sliderWidth + sliderGap) * 2, sliderY, sliderWidth, sliderHeight);
-    ampReleaseSlider.setBounds(sliderStartX + (sliderWidth + sliderGap) * 3, sliderY, sliderWidth, sliderHeight);
-    
-    // Filter ADSR sliders
-    sliderHeight = filterEnvArea.getHeight() - 45;
-    sliderStartX = filterEnvArea.getX() + (filterEnvArea.getWidth() - totalSliderWidth) / 2;
-    sliderY = filterEnvArea.getY() + 32;
-    
-    filterAttackSlider.setBounds(sliderStartX, sliderY, sliderWidth, sliderHeight);
-    filterDecaySlider.setBounds(sliderStartX + sliderWidth + sliderGap, sliderY, sliderWidth, sliderHeight);
-    filterSustainSlider.setBounds(sliderStartX + (sliderWidth + sliderGap) * 2, sliderY, sliderWidth, sliderHeight);
-    filterReleaseSlider.setBounds(sliderStartX + (sliderWidth + sliderGap) * 3, sliderY, sliderWidth, sliderHeight);
-    
-    // LFO knobs
-    int lfoKnobSize = 48;
-    int lfoKnobHeight = lfoKnobSize + 16;
-    int lfoKnobGap = 20;
-    
-    int totalLfoWidth = lfoKnobSize * 2 + lfoKnobGap;
-    int lfoStartX = lfoArea.getX() + (lfoArea.getWidth() - totalLfoWidth) / 2;
-    int lfoY = lfoArea.getY() + (lfoArea.getHeight() - lfoKnobHeight) / 2 + 8;
-    
-    lfo1RateKnob.setBounds(lfoStartX, lfoY, lfoKnobSize, lfoKnobHeight);
-    lfo2RateKnob.setBounds(lfoStartX + lfoKnobSize + lfoKnobGap, lfoY, lfoKnobSize, lfoKnobHeight);
+    auto parts = KndlGrid(content, 6).cols({ 3, 2, 2, 5 });
+    waveScope.setBounds(parts[0].reduced(2));
+    filterDisplay.setBounds(parts[1].reduced(2));
+    spellbookScope.setBounds(parts[2].reduced(2));
+    dataDisplay.setBounds(parts[3].reduced(2));
 }
