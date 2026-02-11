@@ -1,16 +1,16 @@
 #include <JuceHeader.h>
-#include "../dsp/modulators/Spellbook.h"
+#include "../dsp/modulators/Orbit.h"
 #include "../dsp/modulators/LFO.h"
 #include "../dsp/core/ModulationMatrix.h"
 #include "../dsp/core/Voice.h"
 
 // ============================================================================
-// Spellbook Tests
+// Orbit Tests
 // ============================================================================
-class SpellbookTests : public juce::UnitTest
+class OrbitTests : public juce::UnitTest
 {
 public:
-    SpellbookTests() : juce::UnitTest("Spellbook", "KndlSynth") {}
+    OrbitTests() : juce::UnitTest("Orbit", "KndlSynth") {}
     
     void runTest() override
     {
@@ -18,14 +18,14 @@ public:
         
         beginTest("All shapes produce finite outputs over full cycle");
         {
-            const kndl::Spellbook::Shape shapes[] = {
-                kndl::Spellbook::Shape::Circle,
-                kndl::Spellbook::Shape::Triangle,
-                kndl::Spellbook::Shape::Square,
-                kndl::Spellbook::Shape::Pentagon,
-                kndl::Spellbook::Shape::Star,
-                kndl::Spellbook::Shape::Spiral,
-                kndl::Spellbook::Shape::Lemniscate
+            const kndl::Orbit::Shape shapes[] = {
+                kndl::Orbit::Shape::Circle,
+                kndl::Orbit::Shape::Triangle,
+                kndl::Orbit::Shape::Square,
+                kndl::Orbit::Shape::Pentagon,
+                kndl::Orbit::Shape::Star,
+                kndl::Orbit::Shape::Spiral,
+                kndl::Orbit::Shape::Lemniscate
             };
             
             const char* shapeNames[] = {
@@ -34,7 +34,7 @@ public:
             
             for (int s = 0; s < 7; ++s)
             {
-                kndl::Spellbook sb;
+                kndl::Orbit sb;
                 sb.prepare(sampleRate);
                 sb.setShape(shapes[s]);
                 sb.setBaseRate(10.0f); // Fast rate so we cover full cycle quickly
@@ -64,9 +64,9 @@ public:
         
         beginTest("Triangle shape uses correct π/3 offset (no extreme spikes)");
         {
-            kndl::Spellbook sb;
+            kndl::Orbit sb;
             sb.prepare(sampleRate);
-            sb.setShape(kndl::Spellbook::Shape::Triangle);
+            sb.setShape(kndl::Orbit::Shape::Triangle);
             sb.setBaseRate(1.0f);
             sb.setNumOutputs(1);
             
@@ -88,9 +88,9 @@ public:
         
         beginTest("Outputs stay within bounds for bipolar range");
         {
-            kndl::Spellbook sb;
+            kndl::Orbit sb;
             sb.prepare(sampleRate);
-            sb.setShape(kndl::Spellbook::Shape::Circle);
+            sb.setShape(kndl::Orbit::Shape::Circle);
             sb.setBaseRate(5.0f);
             sb.setNumOutputs(2);
             
@@ -108,7 +108,7 @@ public:
         
         beginTest("getOutput returns 0 for out-of-range index");
         {
-            kndl::Spellbook sb;
+            kndl::Orbit sb;
             sb.prepare(sampleRate);
             sb.setNumOutputs(2);
             sb.process();
@@ -119,7 +119,7 @@ public:
     }
 };
 
-static SpellbookTests spellbookTests;
+static OrbitTests orbitTests;
 
 // ============================================================================
 // ModulationMatrix Tests

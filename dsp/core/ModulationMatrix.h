@@ -20,10 +20,10 @@ enum class ModSource
     Velocity,
     ModWheel,
     Aftertouch,
-    SpellbookA,   // Spellbook output 0 (1st output X)
-    SpellbookB,   // Spellbook output 1 (1st output Y)
-    SpellbookC,   // Spellbook output 2 (2nd output X)
-    SpellbookD,   // Spellbook output 3 (2nd output Y)
+    OrbitA,   // Orbit output 0 (1st output X)
+    OrbitB,   // Orbit output 1 (1st output Y)
+    OrbitC,   // Orbit output 2 (2nd output X)
+    OrbitD,   // Orbit output 3 (2nd output Y)
     NumSources
 };
 

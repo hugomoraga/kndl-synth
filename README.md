@@ -1,8 +1,8 @@
 # KNDL Synth
 
-**Sintetizador VST3/Standalone experimental orientado a la modulacion compleja y el diseno sonoro.**
+**Sintetizador VST3/Standalone experimental orientado a la modulacion compleja y el diseño sonoro.**
 
-KNDL Synth es un instrumento virtual polifonico (16 voces) construido con JUCE, disenado para la creacion de sonidos modulados, texturas experimentales, pads evolutivos y bajos agresivos. Su arquitectura combina sintesis substractiva clasica con un sistema de modulacion avanzado (Spellbook + Mod Matrix) que permite generar movimiento y complejidad sonora mas alla de los sintetizadores convencionales.
+KNDL Synth es un instrumento virtual polifonico (16 voces) construido con JUCE, disenado para la creacion de sonidos modulados, texturas experimentales, pads evolutivos y bajos agresivos. Su arquitectura combina sintesis substractiva clasica con un sistema de modulacion avanzado (Orbit + Mod Matrix) que permite generar movimiento y complejidad sonora mas alla de los sintetizadores convencionales.
 
 ---
 
@@ -23,7 +23,7 @@ MIDI In / Sequencer
    DC Blocker -> Master Gain -> Soft Clipper -> DAW
 ```
 
-Cada voz contiene sus propios osciladores, filtro y envelopes. Las modulaciones (LFO, Spellbook, Envelopes, Velocity) se aplican globalmente a traves de la Modulation Matrix.
+Cada voz contiene sus propios osciladores, filtro y envelopes. Las modulaciones (LFO, Orbit, Envelopes, Velocity) se aplican globalmente a traves de la Modulation Matrix.
 
 ---
 
@@ -77,9 +77,9 @@ Dos envelopes independientes:
 - Soporte de sync al tempo del DAW
 - Cada LFO puede tener una forma de onda diferente
 
-### Spellbook (Modulador Geometrico)
+### Orbit (Modulador Geometrico)
 
-El **Spellbook** es un modulador unico de KNDL Synth. Traza un punto a lo largo de formas geometricas y genera senales de modulacion a partir de las coordenadas X/Y de esa trayectoria.
+**Orbit** es un modulador unico de KNDL Synth. Traza un punto a lo largo de formas geometricas (orbitas) y genera senales de modulacion a partir de las coordenadas X/Y de esa trayectoria.
 
 **7 formas disponibles:**
 
@@ -95,7 +95,7 @@ El **Spellbook** es un modulador unico de KNDL Synth. Traza un punto a lo largo 
 
 - **Rate**: 0.01 Hz a 20 kHz (puede alcanzar audio-rate para FM)
 - **Outputs**: Hasta 16 salidas con multiplicadores de velocidad
-- Las salidas SB.A, SB.B, SB.C, SB.D estan disponibles como fuentes de modulacion
+- Las salidas Orb.A, Orb.B, Orb.C, Orb.D estan disponibles como fuentes de modulacion
 
 ### Modulation Matrix
 
@@ -116,8 +116,8 @@ El corazon del diseno sonoro experimental. Permite conectar **cualquier fuente**
 | Velocity | Velocidad MIDI de la nota |
 | ModWheel | Rueda de modulacion (CC1) |
 | Aftertouch | Presion posterior MIDI |
-| SB.A, SB.B | Spellbook salida 1 (X, Y) |
-| SB.C, SB.D | Spellbook salida 2 (X, Y) |
+| Orb.A, Orb.B | Orbit salida 1 (X, Y) |
+| Orb.C, Orb.D | Orbit salida 2 (X, Y) |
 
 #### Destinos disponibles
 
@@ -174,8 +174,8 @@ La interfaz incluye una seccion de monitoreo en tiempo real:
 |---------|------------|
 | **Scope** | Forma de onda de la salida master |
 | **Filt.Resp** | Curva de respuesta del filtro segun el modo activo |
-| **SB.Shape** | Visualizacion de la forma del Spellbook con posicion actual y trail |
-| **Data** | Valores numericos: nota, envelopes, LFOs, Spellbook outputs, nivel de salida |
+| **Orbit** | Visualizacion de la forma del Orbit con posicion actual y trail |
+| **Data** | Valores numericos: nota, envelopes, LFOs, Orbit outputs, nivel de salida |
 
 ---
 
@@ -195,10 +195,10 @@ KNDL Synth incluye **presets de fabrica** que se instalan automaticamente en `~/
 | Psychedelic Drone | Ambient | Drone psicodelico con chorus |
 | Formant Choir | Pad | Coro con filtro de formantes |
 | Comb Pluck | Pluck | Pluck metalico con filtro comb |
-| Spellbook Pad | Pad | Pad modulado con Spellbook |
+| Orbit Pad | Pad | Pad modulado con Orbit |
 | Notch Sweep | FX | Barrido de filtro notch |
 | Vowel Bass | Bass | Bajo con vocales (formant) |
-| Spiral Texture | FX | Textura con espiral del Spellbook |
+| Spiral Texture | FX | Textura con espiral del Orbit |
 | OTT Supersaw | Lead | Supersaw comprimido con OTT |
 | Square Wobble | Bass | Wobble bass con LFO cuadrado |
 | Lemniscate Keys | Keys | Teclado con modulacion en infinito |
@@ -219,8 +219,8 @@ KNDL Synth incluye **presets de fabrica** que se instalan automaticamente en `~/
 | **ADSR** | Attack, Decay, Sustain, Release - fases de un envelope |
 | **LFO** | Low Frequency Oscillator - oscilador lento para modulacion |
 | **Mod Matrix** | Modulation Matrix - sistema de ruteo de modulacion flexible |
-| **SB** | Spellbook - modulador geometrico exclusivo de KNDL |
-| **FM** | Frequency Modulation - modulacion de frecuencia (cuando Spellbook opera a audio-rate) |
+| **ORB** | Orbit - modulador geometrico exclusivo de KNDL |
+| **FM** | Frequency Modulation - modulacion de frecuencia (cuando Orbit opera a audio-rate) |
 | **OTT** | Over The Top - compresor multibanda agresivo (3 bandas) |
 | **BPM** | Beats Per Minute - tempo musical |
 | **CC** | Control Change - mensaje MIDI de controlador |

@@ -31,10 +31,10 @@
   <PARAM id="lfo2_rate" value="0.08"/>
   <PARAM id="lfo2_waveform" value="0"/>
   <PARAM id="lfo2_sync" value="0"/>
-  <PARAM id="spellbook_shape" value="0"/>
-  <PARAM id="spellbook_rate" value="0.25"/>
-  <PARAM id="spellbook_sync" value="0"/>
-  <PARAM id="spellbook_num_outputs" value="4"/>
+  <PARAM id="orbit_shape" value="0"/>
+  <PARAM id="orbit_rate" value="0.25"/>
+  <PARAM id="orbit_sync" value="0"/>
+  <PARAM id="orbit_num_outputs" value="4"/>
   <PARAM id="mod_1_src" value="1"/>
   <PARAM id="mod_1_dst" value="6"/>
   <PARAM id="mod_1_amt" value="0.35"/>

@@ -7,13 +7,14 @@
 #include "core/VoiceManager.h"
 #include "core/ModulationMatrix.h"
 #include "modulators/LFO.h"
-#include "modulators/Spellbook.h"
+#include "modulators/Orbit.h"
 #include "effects/Delay.h"
 #include "effects/Chorus.h"
 #include "effects/Distortion.h"
 #include "effects/Reverb.h"
 #include "effects/DCBlocker.h"
 #include "effects/OTT.h"
+#include "effects/SafetyLimiter.h"
 
 namespace kndl {
 
@@ -42,15 +43,19 @@ struct DebugInfo
     float lfo1Value = 0.0f;
     float lfo2Value = 0.0f;
     
-    // Spellbook
-    float spellbookA = 0.0f;
-    float spellbookB = 0.0f;
-    float spellbookC = 0.0f;
-    float spellbookD = 0.0f;
+    // Orbit
+    float orbitA = 0.0f;
+    float orbitB = 0.0f;
+    float orbitC = 0.0f;
+    float orbitD = 0.0f;
     
     // Output
     float voiceOutput = 0.0f;
     float masterOutput = 0.0f;
+    
+    // Limiter
+    float gainReductionDb = 0.0f;
+    bool isLimiting = false;
     
     // Status flags
     bool hasNaN = false;
@@ -91,7 +96,7 @@ private:
     VoiceManager voiceManager;
     LFO lfo1;
     LFO lfo2;
-    Spellbook spellbook;
+    Orbit orbit;
     ModulationMatrix modMatrix;
     
     juce::SmoothedValue<float> masterGain;
@@ -144,11 +149,11 @@ private:
     std::atomic<float>* filterModeParam = nullptr;
     std::atomic<float>* formantVowelParam = nullptr;
     
-    // Spellbook params
-    std::atomic<float>* spellbookShapeParam = nullptr;
-    std::atomic<float>* spellbookRateParam = nullptr;
-    std::atomic<float>* spellbookSyncParam = nullptr;
-    std::atomic<float>* spellbookNumOutputsParam = nullptr;
+    // Orbit params
+    std::atomic<float>* orbitShapeParam = nullptr;
+    std::atomic<float>* orbitRateParam = nullptr;
+    std::atomic<float>* orbitSyncParam = nullptr;
+    std::atomic<float>* orbitNumOutputsParam = nullptr;
     
     // Mod matrix params (8 slots × 3)
     std::array<std::atomic<float>*, 8> modSrcParams {};
@@ -165,6 +170,9 @@ private:
     // DC Blocker (removes DC offset from output)
     DCBlocker dcBlockerL;
     DCBlocker dcBlockerR;
+    
+    // Safety limiter (protects speakers from excessive levels)
+    SafetyLimiter safetyLimiter;
     
     // Effect parameter pointers
     std::atomic<float>* distortionEnableParam = nullptr;

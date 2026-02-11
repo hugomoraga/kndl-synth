@@ -63,17 +63,17 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     lfo2WaveformSelector.addItem("SQR", 4);
     lfo2WaveformSelector.setScrollWheelEnabled(false);
     
-    // Add Spellbook controls (inside modulators panel)
-    addAndMakeVisible(spellbookRateKnob);
-    addAndMakeVisible(spellbookShapeSelector);
-    spellbookShapeSelector.addItem("Circle", 1);
-    spellbookShapeSelector.addItem("Triangle", 2);
-    spellbookShapeSelector.addItem("Square", 3);
-    spellbookShapeSelector.addItem("Pentagon", 4);
-    spellbookShapeSelector.addItem("Star", 5);
-    spellbookShapeSelector.addItem("Spiral", 6);
-    spellbookShapeSelector.addItem("Lemniscate", 7);
-    spellbookShapeSelector.setScrollWheelEnabled(false);
+    // Add Orbit controls (inside modulators panel)
+    addAndMakeVisible(orbitRateKnob);
+    addAndMakeVisible(orbitShapeSelector);
+    orbitShapeSelector.addItem("Circle", 1);
+    orbitShapeSelector.addItem("Triangle", 2);
+    orbitShapeSelector.addItem("Square", 3);
+    orbitShapeSelector.addItem("Pentagon", 4);
+    orbitShapeSelector.addItem("Star", 5);
+    orbitShapeSelector.addItem("Spiral", 6);
+    orbitShapeSelector.addItem("Lemniscate", 7);
+    orbitShapeSelector.setScrollWheelEnabled(false);
     
     // Add filter mode selectors
     addAndMakeVisible(filterModeSelector);
@@ -97,7 +97,7 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     // Add scope, filter display and data display
     addAndMakeVisible(waveScope);
     addAndMakeVisible(filterDisplay);
-    addAndMakeVisible(spellbookScope);
+    addAndMakeVisible(orbitScope);
     addAndMakeVisible(dataDisplay);
     
     // Add modulation matrix display
@@ -233,9 +233,9 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     lfo1WaveformAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::LFO1_WAVEFORM, lfo1WaveformSelector);
     lfo2WaveformAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::LFO2_WAVEFORM, lfo2WaveformSelector);
     
-    // Spellbook attachments
-    spellbookRateAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::SPELLBOOK_RATE, spellbookRateKnob);
-    spellbookShapeAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::SPELLBOOK_SHAPE, spellbookShapeSelector);
+    // Orbit attachments
+    orbitRateAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::ORBIT_RATE, orbitRateKnob);
+    orbitShapeAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::ORBIT_SHAPE, orbitShapeSelector);
     
     // Filter mode attachments
     filterModeAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::FILTER_MODE, filterModeSelector);
@@ -317,11 +317,11 @@ void KndlSynthAudioProcessorEditor::applyThemeToAllComponents()
     lfo1RateKnob.setTheme(currentTheme);
     lfo2RateKnob.setTheme(currentTheme);
     
-    // Spellbook (inside modulators panel)
-    spellbookRateKnob.setTheme(currentTheme);
+    // Orbit (inside modulators panel)
+    orbitRateKnob.setTheme(currentTheme);
     if (currentTheme)
     {
-        for (auto* combo : { &lfo1WaveformSelector, &lfo2WaveformSelector, &spellbookShapeSelector })
+        for (auto* combo : { &lfo1WaveformSelector, &lfo2WaveformSelector, &orbitShapeSelector })
         {
             combo->setColour(juce::ComboBox::backgroundColourId, currentTheme->getPanelBackground());
             combo->setColour(juce::ComboBox::textColourId, currentTheme->getTextPrimary());
@@ -346,7 +346,7 @@ void KndlSynthAudioProcessorEditor::applyThemeToAllComponents()
     // Scope and data display
     waveScope.setTheme(currentTheme);
     filterDisplay.setTheme(currentTheme);
-    spellbookScope.setTheme(currentTheme);
+    orbitScope.setTheme(currentTheme);
     dataDisplay.setTheme(currentTheme);
     
     if (modMatrixDisplay)
@@ -426,15 +426,15 @@ void KndlSynthAudioProcessorEditor::timerCallback()
     dataDisplay.setFilterValues(cachedDebugInfo.filterCutoff, cachedDebugInfo.filterOutput, cachedDebugInfo.filterEnvValue);
     dataDisplay.setEnvValues(cachedDebugInfo.ampEnvValue, cachedDebugInfo.filterEnvValue);
     dataDisplay.setLfoValues(cachedDebugInfo.lfo1Value, cachedDebugInfo.lfo2Value);
-    dataDisplay.setSpellbookValues(cachedDebugInfo.spellbookA, cachedDebugInfo.spellbookB,
-                                   cachedDebugInfo.spellbookC, cachedDebugInfo.spellbookD);
+    dataDisplay.setOrbitValues(cachedDebugInfo.orbitA, cachedDebugInfo.orbitB,
+                              cachedDebugInfo.orbitC, cachedDebugInfo.orbitD);
     
-    // Feed Spellbook scope (A=X, B=Y of first output pair)
-    spellbookScope.setCurrentXY(cachedDebugInfo.spellbookA, cachedDebugInfo.spellbookB);
+    // Feed Orbit scope (A=X, B=Y of first output pair)
+    orbitScope.setCurrentXY(cachedDebugInfo.orbitA, cachedDebugInfo.orbitB);
     // Update shape name from the combo box
-    spellbookScope.currentShape = spellbookShapeSelector.getSelectedItemIndex();
-    spellbookScope.setShapeName(spellbookShapeSelector.getText());
-    spellbookScope.repaint();
+    orbitScope.currentShape = orbitShapeSelector.getSelectedItemIndex();
+    orbitScope.setShapeName(orbitShapeSelector.getText());
+    orbitScope.repaint();
     
     dataDisplay.setOutputLevel(cachedDebugInfo.masterOutput);
     
@@ -530,6 +530,33 @@ void KndlSynthAudioProcessorEditor::drawTopBar(juce::Graphics& g, juce::Rectangl
     g.setColour(currentTheme->getTextSecondary());
     g.setFont(currentTheme->getSmallFont());
     g.drawText("MIDI", statusX + 18, bounds.getY(), 40, bounds.getHeight(), juce::Justification::centredLeft);
+    
+    // Limiter indicator
+    bool isLimiting = cachedDebugInfo.isLimiting;
+    float grDb = cachedDebugInfo.gainReductionDb;
+    int limiterX = statusX + 56;
+    
+    juce::Rectangle<float> limiterLight(static_cast<float>(limiterX), static_cast<float>(bounds.getCentreY() - 6), 12.0f, 12.0f);
+    
+    if (isLimiting)
+    {
+        // Red glow when limiting, brighter with more GR
+        float intensity = juce::jlimit(0.3f, 1.0f, std::abs(grDb) / 6.0f);
+        auto limColor = currentTheme->getNegative().withAlpha(intensity);
+        g.setColour(limColor);
+        g.fillEllipse(limiterLight);
+        g.setColour(limColor.withAlpha(0.3f));
+        g.fillEllipse(limiterLight.expanded(3.0f));
+    }
+    else
+    {
+        g.setColour(currentTheme->getTextMuted().withAlpha(0.4f));
+        g.fillEllipse(limiterLight);
+    }
+    
+    g.setColour(isLimiting ? currentTheme->getNegative() : currentTheme->getTextMuted().withAlpha(0.5f));
+    g.setFont(currentTheme->getSmallFont());
+    g.drawText("LIM", limiterX + 16, bounds.getY(), 30, bounds.getHeight(), juce::Justification::centredLeft);
     
     // Voice count
     int voiceCount = audioProcessor.getActiveVoiceCount();
@@ -757,22 +784,22 @@ void KndlSynthAudioProcessorEditor::layoutModulators(juce::Rectangle<int> area)
         lfo2WaveformSelector.setBounds(c.getX() + (c.getWidth() - selW) / 2, startY + knobH + 2, selW, selH);
     }
     
-    // Spellbook shape selector (centered vertically)
+    // Orbit shape selector (centered vertically)
     {
         auto c = cols[2];
         int selH = 20;
         int selW = c.getWidth() - 4;
-        spellbookShapeSelector.setBounds(c.getX() + 2, c.getY() + (c.getHeight() - selH) / 2, selW, selH);
+        orbitShapeSelector.setBounds(c.getX() + 2, c.getY() + (c.getHeight() - selH) / 2, selW, selH);
     }
     
-    // Spellbook rate knob
+    // Orbit rate knob
     {
         auto c = cols[3];
         int knobSize = juce::jmin(38, c.getWidth() - 4);
         int knobH = knobSize + 12;
         int cx = c.getX() + (c.getWidth() - knobSize) / 2;
         int cy = c.getY() + (c.getHeight() - knobH) / 2;
-        spellbookRateKnob.setBounds(cx, cy, knobSize, knobH);
+        orbitRateKnob.setBounds(cx, cy, knobSize, knobH);
     }
 }
 
@@ -801,6 +828,6 @@ void KndlSynthAudioProcessorEditor::layoutMonitor(juce::Rectangle<int> area)
     auto parts = KndlGrid(content, 6).cols({ 2, 2, 2, 5 });
     waveScope.setBounds(parts[0].reduced(2));
     filterDisplay.setBounds(parts[1].reduced(2));
-    spellbookScope.setBounds(parts[2].reduced(2));
+    orbitScope.setBounds(parts[2].reduced(2));
     dataDisplay.setBounds(parts[3].reduced(2));
 }

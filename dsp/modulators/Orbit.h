@@ -7,8 +7,8 @@
 namespace kndl {
 
 /**
- * Spellbook Modulator - Genera múltiples señales moduladoras
- * leyendo la posición de un punto que recorre formas geométricas.
+ * Orbit Modulator - Genera múltiples señales moduladoras
+ * leyendo la posición de un punto que recorre formas geométricas (órbitas).
  * 
  * Características:
  * - 7 formas geométricas (circle, triangle, square, pentagon, star, spiral, lemniscate)
@@ -17,7 +17,7 @@ namespace kndl {
  * - Rango hasta audio-rate
  * - Outputs normalizados -1..+1 o 0..1 configurable
  */
-class Spellbook
+class Orbit
 {
 public:
     enum class Shape
@@ -39,7 +39,7 @@ public:
     
     static constexpr int MAX_OUTPUTS = 16;
     
-    Spellbook()
+    Orbit()
     {
         for (size_t i = 0; i < static_cast<size_t>(MAX_OUTPUTS); ++i)
         {

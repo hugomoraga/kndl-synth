@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Parameters presetName="Spellbook Pad" version="1.0" category="Pad">
+<Parameters presetName="Orbit Pad" version="1.0" category="Pad">
   <PARAM id="osc1_waveform" value="0"/>
   <PARAM id="osc1_level" value="0.6"/>
   <PARAM id="osc1_detune" value="-7"/>
@@ -31,10 +31,10 @@
   <PARAM id="lfo2_rate" value="0.35"/>
   <PARAM id="lfo2_waveform" value="1"/>
   <PARAM id="lfo2_sync" value="0"/>
-  <PARAM id="spellbook_shape" value="4"/>
-  <PARAM id="spellbook_rate" value="0.12"/>
-  <PARAM id="spellbook_sync" value="0"/>
-  <PARAM id="spellbook_num_outputs" value="4"/>
+  <PARAM id="orbit_shape" value="4"/>
+  <PARAM id="orbit_rate" value="0.12"/>
+  <PARAM id="orbit_sync" value="0"/>
+  <PARAM id="orbit_num_outputs" value="4"/>
   <PARAM id="mod_1_src" value="8"/>
   <PARAM id="mod_1_dst" value="6"/>
   <PARAM id="mod_1_amt" value="0.4"/>

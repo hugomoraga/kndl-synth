@@ -122,11 +122,11 @@ namespace ParamID {
     inline const char* const MOD_AMT_IDS[] = { MOD_1_AMT, MOD_2_AMT, MOD_3_AMT, MOD_4_AMT, MOD_5_AMT, MOD_6_AMT, MOD_7_AMT, MOD_8_AMT };
     inline constexpr int NUM_MOD_SLOTS = 8;
     
-    // Spellbook
-    inline constexpr const char* SPELLBOOK_SHAPE = "spellbook_shape";
-    inline constexpr const char* SPELLBOOK_RATE = "spellbook_rate";
-    inline constexpr const char* SPELLBOOK_SYNC = "spellbook_sync";
-    inline constexpr const char* SPELLBOOK_NUM_OUTPUTS = "spellbook_num_outputs";
+    // Orbit
+    inline constexpr const char* ORBIT_SHAPE = "orbit_shape";
+    inline constexpr const char* ORBIT_RATE = "orbit_rate";
+    inline constexpr const char* ORBIT_SYNC = "orbit_sync";
+    inline constexpr const char* ORBIT_NUM_OUTPUTS = "orbit_num_outputs";
 }
 
 // Waveform types
@@ -498,7 +498,7 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     ));
     
     // === MODULATION MATRIX (8 slots) ===
-    juce::StringArray modSourceNames {"None", "LFO1", "LFO2", "AmpEnv", "FilterEnv", "Velocity", "ModWheel", "Aftertouch", "SB.A", "SB.B", "SB.C", "SB.D"};
+    juce::StringArray modSourceNames {"None", "LFO1", "LFO2", "AmpEnv", "FilterEnv", "Velocity", "ModWheel", "Aftertouch", "Orb.A", "Orb.B", "Orb.C", "Orb.D"};
     juce::StringArray modDestNames {"None", "Osc1Pitch", "Osc2Pitch", "Osc1Level", "Osc2Level", "SubLevel", "FilterCutoff", "FilterReso", "AmpLevel", "LFO1Rate", "LFO2Rate"};
     
     for (int i = 0; i < ParamID::NUM_MOD_SLOTS; ++i)
@@ -518,27 +518,27 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
             0.0f));
     }
     
-    // === SPELLBOOK ===
+    // === ORBIT ===
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
-        juce::ParameterID{ParamID::SPELLBOOK_SHAPE, 1},
-        "Spellbook Shape",
+        juce::ParameterID{ParamID::ORBIT_SHAPE, 1},
+        "Orbit Shape",
         juce::StringArray{"Circle", "Triangle", "Square", "Pentagon", "Star", "Spiral", "Lemniscate"},
         0
     ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
-        juce::ParameterID{ParamID::SPELLBOOK_RATE, 1},
-        "Spellbook Rate",
+        juce::ParameterID{ParamID::ORBIT_RATE, 1},
+        "Orbit Rate",
         juce::NormalisableRange<float>(0.01f, 20000.0f, 0.0f, 0.3f),
         1.0f
     ));
     params.push_back(std::make_unique<juce::AudioParameterBool>(
-        juce::ParameterID{ParamID::SPELLBOOK_SYNC, 1},
-        "Spellbook Sync",
+        juce::ParameterID{ParamID::ORBIT_SYNC, 1},
+        "Orbit Sync",
         false
     ));
     params.push_back(std::make_unique<juce::AudioParameterInt>(
-        juce::ParameterID{ParamID::SPELLBOOK_NUM_OUTPUTS, 1},
-        "Spellbook Num Outputs",
+        juce::ParameterID{ParamID::ORBIT_NUM_OUTPUTS, 1},
+        "Orbit Num Outputs",
         1, 16, 8
     ));
     

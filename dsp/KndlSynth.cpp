@@ -19,7 +19,7 @@ void KndlSynth::prepare(double newSampleRate, int newSamplesPerBlock)
     voiceManager.prepare(newSampleRate, newSamplesPerBlock);
     lfo1.prepare(newSampleRate);
     lfo2.prepare(newSampleRate);
-    spellbook.prepare(newSampleRate);
+    orbit.prepare(newSampleRate);
     
     // Prepare effects
     distortion.prepare(newSampleRate, newSamplesPerBlock);
@@ -34,6 +34,11 @@ void KndlSynth::prepare(double newSampleRate, int newSamplesPerBlock)
     // Prepare DC blockers
     dcBlockerL.prepare(newSampleRate);
     dcBlockerR.prepare(newSampleRate);
+    
+    // Prepare safety limiter
+    safetyLimiter.prepare(newSampleRate);
+    safetyLimiter.setThreshold(-1.0f);   // Start limiting at -1 dBFS
+    safetyLimiter.setCeiling(-0.1f);     // Absolute ceiling at -0.1 dBFS
     
     masterGain.reset(newSampleRate, 0.02);
 }
@@ -117,11 +122,11 @@ float KndlSynth::processSample()
     modMatrix.setSourceValue(ModSource::FilterEnv, debugInfo.filterEnvValue);
     modMatrix.setSourceValue(ModSource::Velocity, voiceManager.getLastVelocity());
     
-    // Feed Spellbook outputs (from previous process() call - Spellbook doesn't depend on LFO)
-    modMatrix.setSourceValue(ModSource::SpellbookA, spellbook.getOutput(0));
-    modMatrix.setSourceValue(ModSource::SpellbookB, spellbook.getOutput(1));
-    modMatrix.setSourceValue(ModSource::SpellbookC, spellbook.getOutput(2));
-    modMatrix.setSourceValue(ModSource::SpellbookD, spellbook.getOutput(3));
+    // Feed Orbit outputs (from previous process() call - Orbit doesn't depend on LFO)
+    modMatrix.setSourceValue(ModSource::OrbitA, orbit.getOutput(0));
+    modMatrix.setSourceValue(ModSource::OrbitB, orbit.getOutput(1));
+    modMatrix.setSourceValue(ModSource::OrbitC, orbit.getOutput(2));
+    modMatrix.setSourceValue(ModSource::OrbitD, orbit.getOutput(3));
     
     // Feed LFO values from previous sample (so rate mod can affect THIS sample's LFO tick)
     modMatrix.setSourceValue(ModSource::LFO1, lfo1.getCurrentValue());
@@ -146,12 +151,12 @@ float KndlSynth::processSample()
     modMatrix.setSourceValue(ModSource::LFO1, lfo1Value);
     modMatrix.setSourceValue(ModSource::LFO2, lfo2Value);
     
-    // 6. Process Spellbook modulator
-    spellbook.process();
-    float sbA = spellbook.getOutput(0);
-    float sbB = spellbook.getOutput(1);
-    float sbC = spellbook.getOutput(2);
-    float sbD = spellbook.getOutput(3);
+    // 6. Process Orbit modulator
+    orbit.process();
+    float sbA = orbit.getOutput(0);
+    float sbB = orbit.getOutput(1);
+    float sbC = orbit.getOutput(2);
+    float sbD = orbit.getOutput(3);
     
     // Apply all modulation destinations
     float osc1PitchMod = modMatrix.getModulationAmount(ModDestination::Osc1Pitch);
@@ -167,6 +172,15 @@ float KndlSynth::processSample()
     voiceManager.setAmpLevelMod(modMatrix.getModulationAmount(ModDestination::AmpLevel));
     
     float output = voiceManager.process();
+    
+    // Normalize polyphonic sum to prevent volume explosion with many voices
+    int activeVoices = voiceManager.getActiveVoiceCount();
+    if (activeVoices > 1)
+    {
+        // Gentle normalization: sqrt scaling preserves some stacking energy
+        float normFactor = 1.0f / std::sqrt(static_cast<float>(activeVoices));
+        output *= normFactor;
+    }
     
     // Update debug info from voice manager
     const auto& voiceDebug = voiceManager.getDebugInfo();
@@ -186,11 +200,11 @@ float KndlSynth::processSample()
     debugInfo.lfo1Value = lfo1Value;
     debugInfo.lfo2Value = lfo2Value;
     
-    // Spellbook values
-    debugInfo.spellbookA = sbA;
-    debugInfo.spellbookB = sbB;
-    debugInfo.spellbookC = sbC;
-    debugInfo.spellbookD = sbD;
+    // Orbit values
+    debugInfo.orbitA = sbA;
+    debugInfo.orbitB = sbB;
+    debugInfo.orbitC = sbC;
+    debugInfo.orbitD = sbD;
     
     // Check for NaN/Inf
     debugInfo.hasNaN = !std::isfinite(output);
@@ -229,28 +243,20 @@ float KndlSynth::processSample()
     float gain = masterGain.getNextValue();
     output *= gain;
     
-    // Soft clipping final (with less aggressive limiting)
-    bool clipped = false;
-    if (output > 1.0f)
-    {
-        output = 1.0f - std::exp(-(output - 1.0f));
-        clipped = true;
-    }
-    else if (output < -1.0f)
-    {
-        output = -1.0f + std::exp(-(-output - 1.0f));
-        clipped = true;
-    }
+    // Safety limiter: catches peaks, protects speakers
+    output = safetyLimiter.process(output);
     
     // Log audio stats periodically
     Logger::getInstance().logAudioStats(
         std::abs(output), 
         debugInfo.masterOutput,
         voiceManager.getActiveVoiceCount(),
-        clipped
+        safetyLimiter.isLimiting()
     );
     
     debugInfo.masterOutput = output;
+    debugInfo.gainReductionDb = safetyLimiter.getGainReductionDb();
+    debugInfo.isLimiting = safetyLimiter.isLimiting();
     
     return output;
 }
@@ -303,11 +309,11 @@ void KndlSynth::cacheParameterPointers()
     filterModeParam = parameters.getRawParameterValue(ParamID::FILTER_MODE);
     formantVowelParam = parameters.getRawParameterValue(ParamID::FORMANT_VOWEL);
     
-    // Spellbook
-    spellbookShapeParam = parameters.getRawParameterValue(ParamID::SPELLBOOK_SHAPE);
-    spellbookRateParam = parameters.getRawParameterValue(ParamID::SPELLBOOK_RATE);
-    spellbookSyncParam = parameters.getRawParameterValue(ParamID::SPELLBOOK_SYNC);
-    spellbookNumOutputsParam = parameters.getRawParameterValue(ParamID::SPELLBOOK_NUM_OUTPUTS);
+    // Orbit
+    orbitShapeParam = parameters.getRawParameterValue(ParamID::ORBIT_SHAPE);
+    orbitRateParam = parameters.getRawParameterValue(ParamID::ORBIT_RATE);
+    orbitSyncParam = parameters.getRawParameterValue(ParamID::ORBIT_SYNC);
+    orbitNumOutputsParam = parameters.getRawParameterValue(ParamID::ORBIT_NUM_OUTPUTS);
     
     // Effects
     distortionEnableParam = parameters.getRawParameterValue(ParamID::DIST_ENABLE);
@@ -380,11 +386,11 @@ void KndlSynth::updateParametersFromAPVTS()
     lfo2.setWaveform(static_cast<Waveform>(static_cast<int>(*lfo2WaveformParam)));
     lfo2.setSyncEnabled(*lfo2SyncParam > 0.5f);
     
-    // Spellbook
-    spellbook.setShape(static_cast<Spellbook::Shape>(static_cast<int>(*spellbookShapeParam)));
-    spellbook.setBaseRate(*spellbookRateParam);
-    spellbook.setClockSync(*spellbookSyncParam > 0.5f);
-    spellbook.setNumOutputs(static_cast<int>(*spellbookNumOutputsParam));
+    // Orbit
+    orbit.setShape(static_cast<Orbit::Shape>(static_cast<int>(*orbitShapeParam)));
+    orbit.setBaseRate(*orbitRateParam);
+    orbit.setClockSync(*orbitSyncParam > 0.5f);
+    orbit.setNumOutputs(static_cast<int>(*orbitNumOutputsParam));
     
     float gainDb = *masterGainParam;
     float gainLinear = juce::Decibels::decibelsToGain(gainDb);

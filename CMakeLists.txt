@@ -60,7 +60,7 @@ target_sources(KndlSynth PRIVATE
     # Modulators (header-only, small files)
     dsp/modulators/Envelope.h
     dsp/modulators/LFO.h
-    dsp/modulators/Spellbook.h
+    dsp/modulators/Orbit.h
     
     # Sequencer
     dsp/sequencer/InternalSequencer.h
@@ -73,6 +73,7 @@ target_sources(KndlSynth PRIVATE
     dsp/effects/Reverb.h
     dsp/effects/DCBlocker.h
     dsp/effects/OTT.h
+    dsp/effects/SafetyLimiter.h
     
     # UI System
     ui/skins/Theme.h

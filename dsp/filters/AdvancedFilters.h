@@ -7,7 +7,11 @@
 namespace kndl {
 
 /**
- * Formant Filter - Simula formantes vocales usando múltiples resonadores.
+ * Formant Filter - Simula formantes vocales usando 3 biquad bandpass paralelos.
+ * 
+ * Cada vocal (A, E, I, O, U) tiene 3 frecuencias formantes características.
+ * El cutoff desplaza todas las frecuencias proporcionalmente.
+ * La resonancia controla el Q (ancho de banda) de los resonadores.
  */
 class FormantFilter : public Filter
 {
@@ -16,30 +20,40 @@ public:
     {
         sampleRate = newSampleRate;
         reset();
+        updateCoefficients();
     }
     
     void setCutoff(float frequency) override
     {
-        // Formant frequency (principal)
-        formantFreq = juce::jlimit(200.0f, 4000.0f, frequency);
-        updateCoefficients();
+        // Use cutoff as a shift factor: ratio relative to 1000 Hz center
+        float newShift = juce::jlimit(0.25f, 4.0f, frequency / 1000.0f);
+        if (std::abs(newShift - cutoffShift) > 0.001f)
+        {
+            cutoffShift = newShift;
+            dirty = true;
+        }
     }
     
     void setResonance(float res) override
     {
-        resonance = juce::jlimit(0.1f, 0.99f, res);
-        updateCoefficients();
+        float newRes = juce::jlimit(0.0f, 1.0f, res);
+        if (std::abs(newRes - resonance) > 0.001f)
+        {
+            resonance = newRes;
+            dirty = true;
+        }
     }
     
-    void setType(FilterType /*type*/) override
-    {
-        // Formant filter doesn't use FilterType
-    }
+    void setType(FilterType /*type*/) override {}
     
-    void setFormantVowel(int vowel) // 0-4: A, E, I, O, U
+    void setFormantVowel(int vowel)
     {
-        vowelIndex = juce::jlimit(0, 4, vowel);
-        updateFormantFrequencies();
+        int v = juce::jlimit(0, 4, vowel);
+        if (v != vowelIndex)
+        {
+            vowelIndex = v;
+            dirty = true;
+        }
     }
     
     float process(float input) override
@@ -47,33 +61,33 @@ public:
         if (!std::isfinite(input))
             input = 0.0f;
         
-        float output = input;
+        if (dirty)
+        {
+            updateCoefficients();
+            dirty = false;
+        }
         
-        // Apply each formant resonator
+        // Sum of 3 parallel bandpass filters (formant resonators)
+        float output = 0.0f;
+        
         for (size_t i = 0; i < 3; ++i)
         {
-            float freq = formantFreqs[i];
-            float bw = formantBWs[i];
+            // Biquad direct form II transposed
+            float y = coeffs[i].b0 * input + state[i].s1;
+            state[i].s1 = coeffs[i].b1 * input - coeffs[i].a1 * y + state[i].s2;
+            state[i].s2 = coeffs[i].b2 * input - coeffs[i].a2 * y;
             
-            // Simple resonator (bandpass)
-            float w = 2.0f * juce::MathConstants<float>::pi * freq / static_cast<float>(sampleRate);
-            float r = std::exp(-juce::MathConstants<float>::pi * bw / static_cast<float>(sampleRate));
-            
-            float cosw = std::cos(w);
-            float a1 = -2.0f * r * cosw;
-            float a2 = r * r;
-            float b0 = r * std::sin(w);
-            
-            // Process resonator
-            float y = b0 * input + a1 * x1[i] + a2 * x2[i];
-            x2[i] = x1[i];
-            x1[i] = y;
+            // Safety clamp per-resonator
+            y = juce::jlimit(-4.0f, 4.0f, y);
             
             output += y * formantGains[i];
         }
         
         if (!std::isfinite(output))
+        {
             output = 0.0f;
+            reset();
+        }
         
         return output;
     }
@@ -82,43 +96,77 @@ public:
     {
         for (size_t i = 0; i < 3; ++i)
         {
-            x1[i] = 0.0f;
-            x2[i] = 0.0f;
+            state[i].s1 = 0.0f;
+            state[i].s2 = 0.0f;
         }
     }
     
 private:
-    void updateFormantFrequencies()
-    {
-        // Vowel formants (Hz): F1, F2, F3
-        static const float vowels[5][3] = {
-            { 730, 1090, 2440 }, // A
-            { 270, 2290, 3010 }, // E
-            { 390, 1990, 2550 }, // I
-            { 570, 840, 2410 },  // O
-            { 300, 870, 2240 }   // U
-        };
-        
-        for (size_t i = 0; i < 3; ++i)
-        {
-            formantFreqs[i] = vowels[vowelIndex][i];
-            formantBWs[i] = formantFreqs[i] * 0.1f; // 10% bandwidth
-            formantGains[i] = 1.0f / 3.0f; // Equal gain
-        }
-    }
+    struct BiquadCoeffs { float b0=0, b1=0, b2=0, a1=0, a2=0; };
+    struct BiquadState  { float s1=0, s2=0; };
     
     void updateCoefficients()
     {
-        // Coefficients updated in process()
+        if (sampleRate <= 0.0) return;
+        
+        // Vowel formant frequencies (Hz): F1, F2, F3
+        static const float vowelFreqs[5][3] = {
+            { 730,  1090, 2440 }, // A
+            { 270,  2290, 3010 }, // E
+            { 390,  1990, 2550 }, // I
+            { 570,  840,  2410 }, // O
+            { 300,  870,  2240 }  // U
+        };
+        
+        // Vowel gains (relative amplitude of each formant, from speech data)
+        static const float vowelAmps[5][3] = {
+            { 1.0f, 0.5f,  0.3f  }, // A - strong F1
+            { 0.6f, 0.8f,  0.3f  }, // E - strong F2
+            { 0.5f, 0.7f,  0.35f }, // I - strong F2
+            { 0.8f, 0.4f,  0.25f }, // O - strong F1
+            { 0.7f, 0.35f, 0.2f  }  // U - strong F1, weak F2/F3
+        };
+        
+        float nyquist = static_cast<float>(sampleRate) * 0.45f;
+        
+        // Q range: resonance 0 = wide (Q=2), resonance 1 = narrow/peaky (Q=12)
+        float baseQ = 2.0f + resonance * 10.0f;
+        
+        for (size_t i = 0; i < 3; ++i)
+        {
+            // Apply cutoff shift to formant frequency
+            float freq = vowelFreqs[vowelIndex][i] * cutoffShift;
+            freq = juce::jlimit(80.0f, nyquist, freq);
+            
+            formantGains[i] = vowelAmps[vowelIndex][i];
+            
+            // Q increases slightly for higher formants
+            float Q = baseQ * (1.0f + static_cast<float>(i) * 0.2f);
+            
+            // Compute biquad bandpass coefficients (constant 0 dB peak gain)
+            float w0 = 2.0f * juce::MathConstants<float>::pi * freq / static_cast<float>(sampleRate);
+            float cosw = std::cos(w0);
+            float sinw = std::sin(w0);
+            float alpha = sinw / (2.0f * Q);
+            
+            float a0 = 1.0f + alpha;
+            
+            // Bandpass (constant skirt gain, peak at 0 dB)
+            coeffs[i].b0 =  (sinw * 0.5f) / a0;
+            coeffs[i].b1 =  0.0f;
+            coeffs[i].b2 = -(sinw * 0.5f) / a0;
+            coeffs[i].a1 = (-2.0f * cosw)  / a0;
+            coeffs[i].a2 = (1.0f - alpha)  / a0;
+        }
     }
     
-    float formantFreq = 1000.0f;
-    std::array<float, 3> formantFreqs { 730.0f, 1090.0f, 2440.0f };
-    std::array<float, 3> formantBWs { 73.0f, 109.0f, 244.0f };
-    std::array<float, 3> formantGains { 0.33f, 0.33f, 0.33f };
-    std::array<float, 3> x1 { 0.0f, 0.0f, 0.0f };
-    std::array<float, 3> x2 { 0.0f, 0.0f, 0.0f };
+    float cutoffShift = 1.0f;
     int vowelIndex = 0;
+    bool dirty = true;
+    
+    std::array<BiquadCoeffs, 3> coeffs;
+    std::array<BiquadState, 3> state;
+    std::array<float, 3> formantGains { 1.0f, 0.5f, 0.3f };
 };
 
 /**
