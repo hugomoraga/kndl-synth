@@ -3,6 +3,8 @@
 #include "../dsp/modulators/LFO.h"
 #include "../dsp/core/ModulationMatrix.h"
 #include "../dsp/core/Voice.h"
+#include "../dsp/oscillators/NoiseGenerator.h"
+#include "../dsp/effects/Wavefolder.h"
 
 // ============================================================================
 // Orbit Tests
@@ -491,3 +493,252 @@ public:
 };
 
 static LFOTests lfoTests;
+
+// ============================================================================
+// Noise Generator Tests
+// ============================================================================
+class NoiseTests : public juce::UnitTest
+{
+public:
+    NoiseTests() : juce::UnitTest("NoiseGenerator", "KndlSynth") {}
+    
+    void runTest() override
+    {
+        constexpr double sampleRate = 44100.0;
+        
+        beginTest("White noise: all values finite and within [-1, 1]");
+        {
+            kndl::NoiseGenerator noise;
+            noise.prepare(sampleRate);
+            noise.setType(kndl::NoiseType::White);
+            
+            float minVal = 999.0f, maxVal = -999.0f;
+            bool allFinite = true;
+            
+            for (int i = 0; i < 44100; ++i)
+            {
+                float val = noise.process();
+                if (!std::isfinite(val)) allFinite = false;
+                minVal = std::min(minVal, val);
+                maxVal = std::max(maxVal, val);
+            }
+            
+            expect(allFinite, "White noise should produce all finite values");
+            expect(minVal >= -1.01f && maxVal <= 1.01f,
+                "White noise range should be [-1, 1], got [" + juce::String(minVal, 3) + ", " + juce::String(maxVal, 3) + "]");
+        }
+        
+        beginTest("Pink noise: output is finite");
+        {
+            kndl::NoiseGenerator noise;
+            noise.prepare(sampleRate);
+            noise.setType(kndl::NoiseType::Pink);
+            
+            bool allFinite = true;
+            for (int i = 0; i < 44100; ++i)
+            {
+                float val = noise.process();
+                if (!std::isfinite(val)) allFinite = false;
+            }
+            
+            expect(allFinite, "Pink noise should produce all finite values");
+        }
+        
+        beginTest("Crackle noise: mostly silent with sparse impulses");
+        {
+            kndl::NoiseGenerator noise;
+            noise.prepare(sampleRate);
+            noise.setType(kndl::NoiseType::Crackle);
+            
+            int nonZeroCount = 0;
+            for (int i = 0; i < 44100; ++i)
+            {
+                float val = noise.process();
+                if (std::abs(val) > 0.01f) nonZeroCount++;
+            }
+            
+            // Crackle should be sparse: much less than 50% of samples nonzero
+            expect(nonZeroCount < 22050,
+                "Crackle should be sparse, got " + juce::String(nonZeroCount) + " nonzero samples");
+        }
+        
+        beginTest("Noise produces different values (not stuck)");
+        {
+            kndl::NoiseGenerator noise;
+            noise.prepare(sampleRate);
+            noise.setType(kndl::NoiseType::White);
+            
+            float first = noise.process();
+            bool foundDifferent = false;
+            for (int i = 0; i < 10; ++i)
+            {
+                if (std::abs(noise.process() - first) > 0.0001f)
+                {
+                    foundDifferent = true;
+                    break;
+                }
+            }
+            
+            expect(foundDifferent, "White noise should produce varying values");
+        }
+    }
+};
+
+static NoiseTests noiseTests;
+
+// ============================================================================
+// Wavefolder Tests
+// ============================================================================
+class WavefolderTests : public juce::UnitTest
+{
+public:
+    WavefolderTests() : juce::UnitTest("Wavefolder", "KndlSynth") {}
+    
+    void runTest() override
+    {
+        constexpr double sampleRate = 44100.0;
+        
+        beginTest("Disabled wavefolder passes signal through unchanged");
+        {
+            kndl::Wavefolder wf;
+            wf.prepare(sampleRate, 512);
+            wf.setEnabled(false);
+            wf.setAmount(1.0f);
+            wf.setMix(1.0f);
+            
+            float input = 0.75f;
+            float output = wf.process(input);
+            expectEquals(output, input, "Disabled wavefolder should pass through");
+        }
+        
+        beginTest("Zero amount passes signal through");
+        {
+            kndl::Wavefolder wf;
+            wf.prepare(sampleRate, 512);
+            wf.setEnabled(true);
+            wf.setAmount(0.0f);
+            wf.setMix(1.0f);
+            
+            float input = 0.5f;
+            float output = wf.process(input);
+            expectEquals(output, input, "Zero amount should pass through");
+        }
+        
+        beginTest("Wavefolder produces finite output for all amounts");
+        {
+            kndl::Wavefolder wf;
+            wf.prepare(sampleRate, 512);
+            wf.setEnabled(true);
+            wf.setMix(1.0f);
+            
+            for (float amt = 0.0f; amt <= 1.0f; amt += 0.1f)
+            {
+                wf.setAmount(amt);
+                for (float input = -1.0f; input <= 1.0f; input += 0.1f)
+                {
+                    float output = wf.process(input);
+                    expect(std::isfinite(output),
+                        "Wavefolder output should be finite for amount=" + juce::String(amt, 1) + 
+                        " input=" + juce::String(input, 1));
+                }
+            }
+        }
+        
+        beginTest("Wavefolder output bounded to reasonable range");
+        {
+            kndl::Wavefolder wf;
+            wf.prepare(sampleRate, 512);
+            wf.setEnabled(true);
+            wf.setAmount(1.0f);
+            wf.setMix(1.0f);
+            
+            for (float input = -1.0f; input <= 1.0f; input += 0.01f)
+            {
+                float output = wf.process(input);
+                expect(std::abs(output) <= 2.0f,
+                    "Wavefolder output=" + juce::String(output, 3) + " should be bounded");
+            }
+        }
+    }
+};
+
+static WavefolderTests wavefolderTests;
+
+// ============================================================================
+// Voice Unison Tests
+// ============================================================================
+class UnisonTests : public juce::UnitTest
+{
+public:
+    UnisonTests() : juce::UnitTest("Unison", "KndlSynth") {}
+    
+    void runTest() override
+    {
+        constexpr double sampleRate = 44100.0;
+        
+        beginTest("Unison 1 produces normal output");
+        {
+            kndl::Voice voice;
+            voice.prepare(sampleRate, 512);
+            voice.setOsc1Level(0.8f);
+            voice.setUnisonVoices(1);
+            voice.setAmpEnvelope(0.001f, 0.1f, 0.8f, 0.1f);
+            voice.noteOn(60, 1.0f);
+            
+            float maxAbs = 0.0f;
+            for (int i = 0; i < 200; ++i)
+            {
+                float sample = voice.process();
+                maxAbs = std::max(maxAbs, std::abs(sample));
+            }
+            
+            expect(maxAbs > 0.01f, "Unison 1 voice should produce output");
+        }
+        
+        beginTest("Unison 5 produces thicker output");
+        {
+            kndl::Voice voice;
+            voice.prepare(sampleRate, 512);
+            voice.setOsc1Level(0.8f);
+            voice.setOsc1Waveform(kndl::Waveform::Saw);
+            voice.setUnisonVoices(5);
+            voice.setUnisonDetune(30.0f);
+            voice.setAmpEnvelope(0.001f, 0.1f, 0.8f, 0.1f);
+            voice.noteOn(60, 1.0f);
+            
+            bool allFinite = true;
+            for (int i = 0; i < 1000; ++i)
+            {
+                float sample = voice.process();
+                if (!std::isfinite(sample)) allFinite = false;
+            }
+            
+            expect(allFinite, "Unison 5 should produce all finite samples");
+        }
+        
+        beginTest("Ring mod produces output when both oscs enabled");
+        {
+            kndl::Voice voice;
+            voice.prepare(sampleRate, 512);
+            voice.setOsc1Enable(true);
+            voice.setOsc2Enable(true);
+            voice.setOsc1Level(0.8f);
+            voice.setOsc2Level(0.8f);
+            voice.setRingModMix(1.0f); // Full ring mod
+            voice.setAmpEnvelope(0.001f, 0.1f, 0.8f, 0.1f);
+            voice.noteOn(60, 1.0f);
+            
+            float maxAbs = 0.0f;
+            for (int i = 0; i < 500; ++i)
+            {
+                float sample = voice.process();
+                maxAbs = std::max(maxAbs, std::abs(sample));
+                expect(std::isfinite(sample), "Ring mod sample should be finite");
+            }
+            
+            expect(maxAbs > 0.01f, "Ring mod should produce audible output");
+        }
+    }
+};
+
+static UnisonTests unisonTests;

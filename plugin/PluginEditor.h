@@ -111,8 +111,13 @@ private:
     // Master output
     kndl::ui::KndlKnob masterGainKnob { "MASTER" };
     
-    // Macro knobs (top bar)
-    std::array<kndl::ui::KndlKnob, 6> macroKnobs;
+    // New feature knobs (top bar - replaces macro knobs)
+    kndl::ui::KndlKnob noiseLevelKnob { "NOISE" };
+    kndl::ui::KndlKnob ringModKnob { "RING" };
+    kndl::ui::KndlKnob unisonVoicesKnob { "UNI" };
+    kndl::ui::KndlKnob unisonDetuneKnob { "SPRD" };
+    kndl::ui::KndlKnob stereoWidthKnob { "WIDTH" };
+    juce::ComboBox noiseTypeSelector;
     
     // Parameter attachments
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
@@ -173,18 +178,32 @@ private:
     // Master gain attachment
     std::unique_ptr<SliderAttachment> masterGainAttachment;
     
+    // New feature attachments
+    std::unique_ptr<ComboBoxAttachment> noiseTypeAttachment;
+    std::unique_ptr<SliderAttachment> noiseLevelAttachment;
+    std::unique_ptr<SliderAttachment> ringModAttachment;
+    std::unique_ptr<SliderAttachment> unisonVoicesAttachment;
+    std::unique_ptr<SliderAttachment> unisonDetuneAttachment;
+    std::unique_ptr<SliderAttachment> stereoWidthAttachment;
+    
     // Effects sections (tabbed)
+    kndl::ui::KndlEffectSection wfolderSection { "WFOLD", {"AMT", "MIX"} };
     kndl::ui::KndlEffectSection distortionSection { "DIST", {"DRV", "MIX"} };
     kndl::ui::KndlEffectSection chorusSection { "CHORUS", {"RATE", "DPT", "MIX"} };
     kndl::ui::KndlEffectSection delaySection { "DELAY", {"TIME", "FB", "MIX"} };
     kndl::ui::KndlEffectSection reverbSection { "REVERB", {"SIZE", "DMP", "MIX"} };
     kndl::ui::KndlEffectSection ottSection { "OTT", {"DEPTH", "TIME", "MIX"} };
     
+    static constexpr int NUM_FX_TABS = 6;
     int selectedFxTab = 0;
-    std::array<juce::TextButton, 5> fxTabButtons;
+    std::array<juce::TextButton, NUM_FX_TABS> fxTabButtons;
     void selectFxTab(int index);
     
     // Effect attachments
+    std::unique_ptr<ButtonAttachment> wfoldEnableAttachment;
+    std::unique_ptr<SliderAttachment> wfoldAmountAttachment;
+    std::unique_ptr<SliderAttachment> wfoldMixAttachment;
+    
     std::unique_ptr<ButtonAttachment> distEnableAttachment;
     std::unique_ptr<SliderAttachment> distDriveAttachment;
     std::unique_ptr<SliderAttachment> distMixAttachment;

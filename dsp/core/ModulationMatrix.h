@@ -24,6 +24,7 @@ enum class ModSource
     OrbitB,   // Orbit output 1 (1st output Y)
     OrbitC,   // Orbit output 2 (2nd output X)
     OrbitD,   // Orbit output 3 (2nd output Y)
+    Noise,    // Random noise value (S&H style modulation)
     NumSources
 };
 
@@ -43,6 +44,9 @@ enum class ModDestination
     AmpLevel,
     LFO1Rate,
     LFO2Rate,
+    NoiseLevel,
+    RingModMix,
+    Pan,
     NumDestinations
 };
 

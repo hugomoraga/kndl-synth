@@ -51,6 +51,7 @@ target_sources(KndlSynth PRIVATE
     dsp/oscillators/Oscillator.h
     dsp/oscillators/BasicOscillator.h
     dsp/oscillators/SubOscillator.h
+    dsp/oscillators/NoiseGenerator.h
     
     # Filters (header-only, small files)
     dsp/filters/Filter.h
@@ -73,6 +74,7 @@ target_sources(KndlSynth PRIVATE
     dsp/effects/Reverb.h
     dsp/effects/DCBlocker.h
     dsp/effects/OTT.h
+    dsp/effects/Wavefolder.h
     dsp/effects/SafetyLimiter.h
     
     # UI System
@@ -118,6 +120,30 @@ target_link_libraries(KndlSynth PRIVATE
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
 )
+
+# ============================================================================
+# Copy/update factory presets after build
+# ============================================================================
+set(PRESET_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/resources/presets")
+set(PRESET_DST_DIR "$ENV{HOME}/Documents/KndlSynth/Presets")
+
+file(GLOB FACTORY_PRESETS "${PRESET_SRC_DIR}/*.kndl")
+
+add_custom_command(TARGET KndlSynth POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${PRESET_DST_DIR}"
+    COMMENT "Ensuring preset directory exists: ${PRESET_DST_DIR}"
+)
+
+foreach(PRESET_FILE ${FACTORY_PRESETS})
+    get_filename_component(PRESET_NAME "${PRESET_FILE}" NAME)
+    add_custom_command(TARGET KndlSynth POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PRESET_FILE}"
+            "${PRESET_DST_DIR}/${PRESET_NAME}"
+    )
+endforeach()
+
+message(STATUS "Factory presets (${CMAKE_CURRENT_SOURCE_DIR}/resources/presets/) → ${PRESET_DST_DIR}")
 
 # ============================================================================
 # Test Runner

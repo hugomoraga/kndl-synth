@@ -95,7 +95,37 @@ echo -e "${YELLOW}Building KndlSynth...${NC}"
 cmake --build "$BUILD_DIR"
 echo -e "${GREEN}Build complete.${NC}"
 
-# ── Step 5: Install VST3 (optional) ────────────────────────────────
+# ── Step 5: Copy/update factory presets ───────────────────────────
+PRESET_SRC="$PROJECT_DIR/resources/presets"
+PRESET_DST="$HOME/Documents/KndlSynth/Presets"
+
+if [ -d "$PRESET_SRC" ]; then
+    mkdir -p "$PRESET_DST"
+    UPDATED=0
+    COPIED=0
+    for preset in "$PRESET_SRC"/*.kndl; do
+        [ -f "$preset" ] || continue
+        filename="$(basename "$preset")"
+        dst_file="$PRESET_DST/$filename"
+        if [ -f "$dst_file" ]; then
+            # Update only if source is newer
+            if [ "$preset" -nt "$dst_file" ]; then
+                cp "$preset" "$dst_file"
+                UPDATED=$((UPDATED + 1))
+            fi
+        else
+            cp "$preset" "$dst_file"
+            COPIED=$((COPIED + 1))
+        fi
+    done
+    if [ $COPIED -gt 0 ] || [ $UPDATED -gt 0 ]; then
+        echo -e "${GREEN}Presets: ${COPIED} new, ${UPDATED} updated → $PRESET_DST${NC}"
+    else
+        echo -e "${CYAN}Presets up to date.${NC}"
+    fi
+fi
+
+# ── Step 6: Install VST3 (optional) ──────────────────────────────
 if $INSTALL_VST; then
     echo -e "${YELLOW}Installing VST3...${NC}"
     mkdir -p "$VST3_INSTALL_DIR"
@@ -104,7 +134,7 @@ if $INSTALL_VST; then
     echo -e "${GREEN}VST3 installed: $VST3_INSTALL_DIR/KndlSynth.vst3${NC}"
 fi
 
-# ── Step 6: Launch standalone (optional) ────────────────────────────
+# ── Step 7: Launch standalone (optional) ──────────────────────────
 if $RUN_STANDALONE; then
     echo -e "${YELLOW}Launching standalone...${NC}"
     open "$STANDALONE_APP"

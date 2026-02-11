@@ -11,19 +11,20 @@ KNDL Synth es un instrumento virtual polifonico (16 voces) construido con JUCE, 
 ```
 MIDI In / Sequencer
         |
-   +---------+
-   | Voice x16| (polifonia)
-   |  OSC1 ---+
-   |  OSC2    |---> Mixer ---> Filter ---> Amp Envelope ---> Output
-   |  SUB  ---+
-   +---------+
+   +------------------+
+   | Voice x16         | (polifonia)
+   |  OSC1 (+ Unison) -+
+   |  OSC2 (+ Unison)  +--> Ring Mod Mix ---> Filter ---> Amp Env ---> Output
+   |  SUB              -+
+   |  NOISE            -+
+   +------------------+
         |
-   Effects Chain: Distortion -> Chorus -> Delay -> Reverb -> OTT
+   Effects: Wavefolder -> Distortion -> Chorus -> Delay -> Reverb -> OTT
         |
-   DC Blocker -> Master Gain -> Soft Clipper -> DAW
+   DC Blocker -> Master Gain -> Safety Limiter -> Stereo Width/Pan -> DAW
 ```
 
-Cada voz contiene sus propios osciladores, filtro y envelopes. Las modulaciones (LFO, Orbit, Envelopes, Velocity) se aplican globalmente a traves de la Modulation Matrix.
+Cada voz contiene sus propios osciladores (con unison), noise generator, ring mod, filtro y envelopes. Las modulaciones (LFO, Orbit, Noise, Envelopes, Velocity) se aplican globalmente a traves de la Modulation Matrix. La salida pasa por stereo width (Haas effect) y pan modulation para movimiento espacial.
 
 ---
 
@@ -31,16 +32,42 @@ Cada voz contiene sus propios osciladores, filtro y envelopes. Las modulaciones 
 
 ### Osciladores
 
-El sintetizador cuenta con **3 fuentes de sonido** por voz:
+El sintetizador cuenta con **5 fuentes de sonido** por voz:
 
 | Componente | Formas de onda | Controles |
 |-----------|---------------|-----------|
 | **OSC 1** | Sine, Triangle, Saw, Square | Level, Detune (+-100 cents), Octave (+-2), Enable |
 | **OSC 2** | Sine, Triangle, Saw, Square | Level, Detune (+-100 cents), Octave (+-2), Enable |
 | **SUB** | Sine (sub-oscilador) | Level, Octave (-2 a 0), Enable |
+| **NOISE** | White, Pink, Crackle | Type, Level (modulable) |
+| **RING MOD** | OSC1 x OSC2 | Mix (0=normal, 1=full ring) |
 
 - Los osciladores Saw y Square usan **PolyBLEP** para reduccion de aliasing.
 - Cada oscilador tiene un boton ON/OFF que lo silencia completamente en el DSP.
+- **Noise**: White (espectro plano), Pink (-3dB/octava, natural), Crackle (impulsos sparse tipo vinilo).
+- **Ring Mod**: Multiplica OSC1 x OSC2 produciendo timbres metalicos, inhumanos y alienigenas.
+
+### Unison / Super Mode
+
+Multiplica cada oscilador en N voces detuneadas simetricamente:
+
+| Parametro | Rango | Descripcion |
+|-----------|-------|-------------|
+| **UNI** (Voices) | 1 - 5 | Numero de copias por oscilador |
+| **SPRD** (Spread) | 0 - 100 cents | Detuning entre copias |
+
+- **1 voice** = sonido normal, **5 voices** = muro masivo cinematografico tipo Hans Zimmer.
+- El spread se distribuye simetricamente: [-spread, -spread/2, 0, +spread/2, +spread]
+
+### Stereo Width / Pan Modulation
+
+| Parametro | Rango | Descripcion |
+|-----------|-------|-------------|
+| **WIDTH** | 0 - 1 | Ancho estereo (Haas effect) |
+| **Pan** | Mod Destination | Posicion L/R modulable via Mod Matrix |
+
+- Width = 0 es mono, Width = 1 aplica ~5ms de delay al canal R para efecto Haas.
+- Pan se modula desde la Mod Matrix (LFO, Orbit, etc.) para movimiento espacial inmersivo.
 
 ### Filtro
 
@@ -130,17 +157,21 @@ El corazon del diseno sonoro experimental. Permite conectar **cualquier fuente**
 | FilterReso | Resonancia del filtro |
 | AmpLevel | Nivel de amplitud general |
 | LFO1Rate, LFO2Rate | Velocidad de los LFOs (meta-modulacion) |
+| NoiseLevel | Nivel del oscilador de ruido |
+| RingMod | Mezcla de ring modulation (OSC1 x OSC2) |
+| Pan | Posicion estereo (-1 izq, +1 der) |
 
 ### Cadena de Efectos
 
-5 efectos en serie, cada uno con bypass independiente:
+6 efectos en serie, cada uno con bypass independiente:
 
 | Efecto | Descripcion | Controles |
 |--------|------------|-----------|
+| **Wavefolder** | Dobla la senal creando armonicos complejos (estilo Buchla) | Amount, Mix |
 | **Distortion** | Saturacion/distorsion | Drive, Mix |
 | **Chorus** | Efecto de coro (modulacion de delay) | Rate, Depth, Mix |
-| **Delay** | Eco/repeticion temporal | Time (10-1000ms), Feedback, Mix |
-| **Reverb** | Reverberacion (Schroeder, 4 comb + 2 allpass) | Size, Damping, Mix |
+| **Delay** | Eco con interpolacion Hermite y damping analogico | Time (10-1000ms), Feedback, Mix |
+| **Reverb** | Freeverb-style (8 comb + 4 allpass + pre-delay) | Size, Damping, Mix |
 | **OTT** | Compresor multibanda agresivo (3 bandas) | Depth, Time, Mix |
 
 ### Secuenciador Interno
@@ -246,6 +277,18 @@ KNDL Synth incluye **presets de fabrica** que se instalan automaticamente en `~/
 | **ModWheel** | Rueda de modulacion - controlador fisico MIDI (CC1) |
 | **Voice Stealing** | Reasignacion de una voz activa cuando se excede la polifonia |
 | **DAW** | Digital Audio Workstation - software de produccion musical |
+| **Ring Mod** | Ring Modulation - multiplicacion de dos senales, genera timbres metalicos/alienigenas |
+| **Wavefolder** | Dobla la senal sobre si misma generando armonicos complejos (estilo Buchla/Make Noise) |
+| **Unison** | Multiples copias detuneadas de un oscilador para crear sonidos masivos |
+| **SPRD** | Spread - cantidad de detune entre voces de unison (en cents) |
+| **UNI** | Unison voices - numero de copias por oscilador (1-5) |
+| **Haas Effect** | Efecto psicoacustico de estereo creado por un pequeno delay entre canales L/R |
+| **WIDTH** | Stereo Width - ancho estereo via efecto Haas (0=mono, 1=full stereo) |
+| **Pink Noise** | Ruido con -3dB/octava, suena mas natural y organico que el ruido blanco |
+| **Crackle** | Ruido de impulsos sparse, similar a vinilo o interferencia electrica |
+| **S&H** | Sample & Hold - tecnica de modulacion donde se muestrea un valor aleatorio |
+| **Hermite** | Interpolacion cubica Hermite - suaviza la lectura del delay buffer |
+| **Freeverb** | Algoritmo de reverb denso usando 8 filtros comb + 4 allpass con delay times primos |
 
 ---
 

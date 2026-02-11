@@ -7,12 +7,18 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     // Set theme
     currentTheme = &arrakisTheme;
     
-    // Initialize macro knobs
-    for (size_t i = 0; i < macroKnobs.size(); ++i)
-    {
-        macroKnobs[i].setLabel("M" + juce::String(static_cast<int>(i) + 1));
-        addAndMakeVisible(macroKnobs[i]);
-    }
+    // New feature knobs (top bar)
+    addAndMakeVisible(noiseLevelKnob);
+    addAndMakeVisible(ringModKnob);
+    addAndMakeVisible(unisonVoicesKnob);
+    addAndMakeVisible(unisonDetuneKnob);
+    addAndMakeVisible(stereoWidthKnob);
+    
+    addAndMakeVisible(noiseTypeSelector);
+    noiseTypeSelector.addItem("WHITE", 1);
+    noiseTypeSelector.addItem("PINK", 2);
+    noiseTypeSelector.addItem("CRACKLE", 3);
+    noiseTypeSelector.setScrollWheelEnabled(false);
     
     // Add oscillator sections
     addAndMakeVisible(osc1Section);
@@ -106,6 +112,7 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     modMatrixDisplay->connectToAPVTS(audioProcessor.getAPVTS());
     
     // Add effect sections (all visible, tab system hides inactive)
+    addAndMakeVisible(wfolderSection);
     addAndMakeVisible(distortionSection);
     addAndMakeVisible(chorusSection);
     addAndMakeVisible(delaySection);
@@ -113,8 +120,8 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     addAndMakeVisible(ottSection);
     
     // FX tab buttons
-    const juce::String fxTabNames[] = { "DIST", "CHORUS", "DELAY", "REVERB", "OTT" };
-    for (int i = 0; i < 5; ++i)
+    const juce::String fxTabNames[] = { "WFOLD", "DIST", "CHORUS", "DELAY", "REVERB", "OTT" };
+    for (int i = 0; i < NUM_FX_TABS; ++i)
     {
         fxTabButtons[static_cast<size_t>(i)].setButtonText(fxTabNames[i]);
         fxTabButtons[static_cast<size_t>(i)].setClickingTogglesState(false);
@@ -255,7 +262,19 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     // Master gain attachment
     masterGainAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::MASTER_GAIN, masterGainKnob);
     
+    // New feature attachments
+    noiseTypeAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::NOISE_TYPE, noiseTypeSelector);
+    noiseLevelAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::NOISE_LEVEL, noiseLevelKnob);
+    ringModAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::RING_MOD_MIX, ringModKnob);
+    unisonVoicesAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::UNISON_VOICES, unisonVoicesKnob);
+    unisonDetuneAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::UNISON_DETUNE, unisonDetuneKnob);
+    stereoWidthAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::STEREO_WIDTH, stereoWidthKnob);
+    
     // Effect attachments
+    wfoldEnableAttachment = std::make_unique<ButtonAttachment>(apvts, kndl::ParamID::WFOLD_ENABLE, wfolderSection.getEnableButton());
+    wfoldAmountAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::WFOLD_AMOUNT, wfolderSection.getKnob(0));
+    wfoldMixAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::WFOLD_MIX, wfolderSection.getKnob(1));
+    
     distEnableAttachment = std::make_unique<ButtonAttachment>(apvts, kndl::ParamID::DIST_ENABLE, distortionSection.getEnableButton());
     distDriveAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::DIST_DRIVE, distortionSection.getKnob(0));
     distMixAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::DIST_MIX, distortionSection.getKnob(1));
@@ -304,9 +323,12 @@ void KndlSynthAudioProcessorEditor::applyThemeToAllComponents()
     lfoPanel.setTheme(currentTheme);
     monitorPanel.setTheme(currentTheme);
     
-    // Macro knobs
-    for (auto& knob : macroKnobs)
-        knob.setTheme(currentTheme);
+    // New feature knobs
+    noiseLevelKnob.setTheme(currentTheme);
+    ringModKnob.setTheme(currentTheme);
+    unisonVoicesKnob.setTheme(currentTheme);
+    unisonDetuneKnob.setTheme(currentTheme);
+    stereoWidthKnob.setTheme(currentTheme);
     
     // Filter knobs
     filterCutoffKnob.setTheme(currentTheme);
@@ -332,7 +354,7 @@ void KndlSynthAudioProcessorEditor::applyThemeToAllComponents()
     orbitRateKnob.setTheme(currentTheme);
     if (currentTheme)
     {
-        for (auto* combo : { &lfo1WaveformSelector, &lfo2WaveformSelector, &orbitShapeSelector })
+        for (auto* combo : { &lfo1WaveformSelector, &lfo2WaveformSelector, &orbitShapeSelector, &noiseTypeSelector })
         {
             combo->setColour(juce::ComboBox::backgroundColourId, currentTheme->getPanelBackground());
             combo->setColour(juce::ComboBox::textColourId, currentTheme->getTextPrimary());
@@ -364,6 +386,7 @@ void KndlSynthAudioProcessorEditor::applyThemeToAllComponents()
         modMatrixDisplay->setTheme(currentTheme);
     
     // Effect sections
+    wfolderSection.setTheme(currentTheme);
     distortionSection.setTheme(currentTheme);
     chorusSection.setTheme(currentTheme);
     delaySection.setTheme(currentTheme);
@@ -458,9 +481,9 @@ void KndlSynthAudioProcessorEditor::timerCallback()
     if (currentTheme)
     {
         kndl::ui::KndlEffectSection* fxSections[] = {
-            &distortionSection, &chorusSection, &delaySection, &reverbSection, &ottSection
+            &wfolderSection, &distortionSection, &chorusSection, &delaySection, &reverbSection, &ottSection
         };
-        for (int i = 0; i < 5; ++i)
+        for (int i = 0; i < NUM_FX_TABS; ++i)
         {
             if (i == selectedFxTab) continue;
             bool isOn = fxSections[i]->getEnableButton().getToggleState();
@@ -685,20 +708,30 @@ void KndlSynthAudioProcessorEditor::layoutTopBar(juce::Rectangle<int> area)
     seqButton.setBounds(area.getRight() - 130, area.getY() + 12, 50, 26);
     logButton.setBounds(area.getRight() - 70, area.getY() + 12, 55, 26);
     
-    // Macro knobs (fill space between preset and master)
-    auto macroArea = area;
-    macroArea.removeFromLeft(310);
-    macroArea.removeFromRight(250);
+    // Feature knobs (fill space between preset and master)
+    auto featureArea = area;
+    featureArea.removeFromLeft(310);
+    featureArea.removeFromRight(250);
     
-    int macroSize = 55;
-    int macroH = macroSize + 14;
-    int spacing = (macroArea.getWidth() - macroSize * 6) / 7;
-    int macroY = macroArea.getY() + (macroArea.getHeight() - macroH) / 2;
+    // Layout: [NoiseTypeCombo][NoiseLvl][Ring][Uni][Sprd][Width]
+    int fknobSize = 46;
+    int fknobH = fknobSize + 14;
+    int comboW = 62;
+    int comboH = 20;
+    int fspacing = 4;
+    int totalW = comboW + fspacing + fknobSize * 5 + fspacing * 4;
+    int startX = featureArea.getX() + (featureArea.getWidth() - totalW) / 2;
+    int fknobY = featureArea.getY() + (featureArea.getHeight() - fknobH) / 2;
+    int comboY = featureArea.getY() + (featureArea.getHeight() - comboH) / 2;
     
-    for (size_t i = 0; i < macroKnobs.size(); ++i)
+    noiseTypeSelector.setBounds(startX, comboY, comboW, comboH);
+    int x = startX + comboW + fspacing;
+    
+    kndl::ui::KndlKnob* featureKnobs[] = { &noiseLevelKnob, &ringModKnob, &unisonVoicesKnob, &unisonDetuneKnob, &stereoWidthKnob };
+    for (auto* knob : featureKnobs)
     {
-        int x = macroArea.getX() + spacing + static_cast<int>(i) * (macroSize + spacing);
-        macroKnobs[i].setBounds(x, macroY, macroSize, macroH);
+        knob->setBounds(x, fknobY, fknobSize, fknobH);
+        x += fknobSize + fspacing;
     }
 }
 
@@ -834,13 +867,13 @@ void KndlSynthAudioProcessorEditor::layoutModulators(juce::Rectangle<int> area)
 
 void KndlSynthAudioProcessorEditor::selectFxTab(int index)
 {
-    selectedFxTab = juce::jlimit(0, 4, index);
+    selectedFxTab = juce::jlimit(0, NUM_FX_TABS - 1, index);
     
     kndl::ui::KndlEffectSection* sections[] = {
-        &distortionSection, &chorusSection, &delaySection, &reverbSection, &ottSection
+        &wfolderSection, &distortionSection, &chorusSection, &delaySection, &reverbSection, &ottSection
     };
     
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < NUM_FX_TABS; ++i)
     {
         sections[i]->setVisible(i == selectedFxTab);
         
@@ -877,9 +910,9 @@ void KndlSynthAudioProcessorEditor::layoutEffects(juce::Rectangle<int> area)
     // Tab bar at top
     int tabH = 22;
     auto tabBar = area.removeFromTop(tabH);
-    int tabW = tabBar.getWidth() / 5;
+    int tabW = tabBar.getWidth() / NUM_FX_TABS;
     
-    for (int i = 0; i < 5; ++i)
+    for (int i = 0; i < NUM_FX_TABS; ++i)
     {
         fxTabButtons[static_cast<size_t>(i)].setBounds(
             tabBar.getX() + i * tabW, tabBar.getY(), tabW, tabH);
@@ -889,7 +922,7 @@ void KndlSynthAudioProcessorEditor::layoutEffects(juce::Rectangle<int> area)
     auto content = area.reduced(0, 2);
     
     kndl::ui::KndlEffectSection* sections[] = {
-        &distortionSection, &chorusSection, &delaySection, &reverbSection, &ottSection
+        &wfolderSection, &distortionSection, &chorusSection, &delaySection, &reverbSection, &ottSection
     };
     
     sections[selectedFxTab]->setBounds(content);

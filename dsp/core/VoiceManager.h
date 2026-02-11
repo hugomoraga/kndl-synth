@@ -142,6 +142,19 @@ public:
     void setAmpEnvelope(float a, float d, float s, float r) { for (auto& v : voices) v.setAmpEnvelope(a, d, s, r); }
     void setFilterEnvelope(float a, float d, float s, float r) { for (auto& v : voices) v.setFilterEnvelope(a, d, s, r); }
     
+    // Noise
+    void setNoiseType(NoiseType type) { for (auto& v : voices) v.setNoiseType(type); }
+    void setNoiseLevel(float level) { for (auto& v : voices) v.setNoiseLevel(level); }
+    void setNoiseLevelMod(float mod) { for (auto& v : voices) v.setNoiseLevelMod(mod); }
+    
+    // Ring Mod
+    void setRingModMix(float mix) { for (auto& v : voices) v.setRingModMix(mix); }
+    void setRingModMixMod(float mod) { for (auto& v : voices) v.setRingModMixMod(mod); }
+    
+    // Unison
+    void setUnisonVoices(int voices_) { for (auto& v : voices) v.setUnisonVoices(voices_); }
+    void setUnisonDetune(float cents) { for (auto& v : voices) v.setUnisonDetune(cents); }
+    
     void applyPitchMod(float semitones) { for (auto& v : voices) v.applyPitchMod(semitones); }
     void applyOsc2PitchMod(float semitones) { for (auto& v : voices) v.applyOsc2PitchMod(semitones); }
     void setFilterCutoffMod(float mod)  { for (auto& v : voices) v.setFilterCutoffMod(mod); }

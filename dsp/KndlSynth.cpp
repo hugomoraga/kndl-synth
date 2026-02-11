@@ -20,8 +20,10 @@ void KndlSynth::prepare(double newSampleRate, int newSamplesPerBlock)
     lfo1.prepare(newSampleRate);
     lfo2.prepare(newSampleRate);
     orbit.prepare(newSampleRate);
+    noiseModSource.prepare(newSampleRate);
     
     // Prepare effects
+    wavefolder.prepare(newSampleRate, newSamplesPerBlock);
     distortion.prepare(newSampleRate, newSamplesPerBlock);
     chorus.prepare(newSampleRate, newSamplesPerBlock);
     delay.prepare(newSampleRate, newSamplesPerBlock);
@@ -41,6 +43,12 @@ void KndlSynth::prepare(double newSampleRate, int newSamplesPerBlock)
     safetyLimiter.setCeiling(-0.1f);     // Absolute ceiling at -0.1 dBFS
     
     masterGain.reset(newSampleRate, 0.02);
+    
+    // Stereo width delay buffer (max ~5ms for Haas effect)
+    size_t maxDelay = static_cast<size_t>(newSampleRate * 0.005);
+    widthDelayBuffer.resize(maxDelay, 0.0f);
+    widthDelayWriteIdx = 0;
+    widthDelaySamples = maxDelay / 2; // default ~2.5ms
 }
 
 void KndlSynth::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -56,6 +64,13 @@ void KndlSynth::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&
     auto* leftChannel = buffer.getWritePointer(0);
     auto* rightChannel = numChannels > 1 ? buffer.getWritePointer(1) : nullptr;
     
+    // Get stereo parameters
+    float width = (stereoWidthParam != nullptr) ? stereoWidthParam->load() : 0.5f;
+    
+    // Calculate delay samples for width (0 = mono, 1 = max ~5ms)
+    if (!widthDelayBuffer.empty())
+        widthDelaySamples = static_cast<size_t>(width * static_cast<float>(widthDelayBuffer.size() - 1));
+    
     int sampleIndex = 0;
     
     for (const auto metadata : midiMessages)
@@ -65,10 +80,38 @@ void KndlSynth::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&
         
         while (sampleIndex < messagePosition && sampleIndex < numSamples)
         {
-            float sample = processSample();
-            leftChannel[sampleIndex] = sample;
+            float mono = processSample();
+            
+            // Apply stereo: pan + width decorrelation
+            float pan = juce::jlimit(-1.0f, 1.0f, debugInfo.panPosition);
+            
+            // Constant-power pan: center = 0, left = -1, right = +1
+            float panAngle = (pan + 1.0f) * 0.5f; // 0 to 1
+            float gainL = std::cos(panAngle * juce::MathConstants<float>::halfPi);
+            float gainR = std::sin(panAngle * juce::MathConstants<float>::halfPi);
+            
+            leftChannel[sampleIndex] = mono * gainL;
+            
             if (rightChannel)
-                rightChannel[sampleIndex] = sample;
+            {
+                // Apply Haas effect for stereo width: delay R channel slightly
+                if (width > 0.01f && !widthDelayBuffer.empty() && widthDelaySamples > 0)
+                {
+                    widthDelayBuffer[widthDelayWriteIdx] = mono;
+                    size_t readIdx = (widthDelayWriteIdx + widthDelayBuffer.size() - widthDelaySamples)
+                                     % widthDelayBuffer.size();
+                    float delayedR = widthDelayBuffer[readIdx];
+                    widthDelayWriteIdx = (widthDelayWriteIdx + 1) % widthDelayBuffer.size();
+                    
+                    // Blend between mono and decorrelated
+                    rightChannel[sampleIndex] = delayedR * gainR;
+                }
+                else
+                {
+                    rightChannel[sampleIndex] = mono * gainR;
+                }
+            }
+            
             sampleIndex++;
         }
         
@@ -77,10 +120,32 @@ void KndlSynth::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&
     
     while (sampleIndex < numSamples)
     {
-        float sample = processSample();
-        leftChannel[sampleIndex] = sample;
+        float mono = processSample();
+        
+        float pan = juce::jlimit(-1.0f, 1.0f, debugInfo.panPosition);
+        float panAngle = (pan + 1.0f) * 0.5f;
+        float gainL = std::cos(panAngle * juce::MathConstants<float>::halfPi);
+        float gainR = std::sin(panAngle * juce::MathConstants<float>::halfPi);
+        
+        leftChannel[sampleIndex] = mono * gainL;
+        
         if (rightChannel)
-            rightChannel[sampleIndex] = sample;
+        {
+            if (width > 0.01f && !widthDelayBuffer.empty() && widthDelaySamples > 0)
+            {
+                widthDelayBuffer[widthDelayWriteIdx] = mono;
+                size_t readIdx = (widthDelayWriteIdx + widthDelayBuffer.size() - widthDelaySamples)
+                                 % widthDelayBuffer.size();
+                float delayedR = widthDelayBuffer[readIdx];
+                widthDelayWriteIdx = (widthDelayWriteIdx + 1) % widthDelayBuffer.size();
+                rightChannel[sampleIndex] = delayedR * gainR;
+            }
+            else
+            {
+                rightChannel[sampleIndex] = mono * gainR;
+            }
+        }
+        
         sampleIndex++;
     }
 }
@@ -122,13 +187,18 @@ float KndlSynth::processSample()
     modMatrix.setSourceValue(ModSource::FilterEnv, debugInfo.filterEnvValue);
     modMatrix.setSourceValue(ModSource::Velocity, voiceManager.getLastVelocity());
     
-    // Feed Orbit outputs (from previous process() call - Orbit doesn't depend on LFO)
+    // Feed Orbit outputs
     modMatrix.setSourceValue(ModSource::OrbitA, orbit.getOutput(0));
     modMatrix.setSourceValue(ModSource::OrbitB, orbit.getOutput(1));
     modMatrix.setSourceValue(ModSource::OrbitC, orbit.getOutput(2));
     modMatrix.setSourceValue(ModSource::OrbitD, orbit.getOutput(3));
     
-    // Feed LFO values from previous sample (so rate mod can affect THIS sample's LFO tick)
+    // Feed Noise mod source (S&H style random modulation)
+    float noiseModVal = noiseModSource.process();
+    modMatrix.setSourceValue(ModSource::Noise, noiseModVal);
+    debugInfo.noiseModValue = noiseModVal;
+    
+    // Feed LFO values from previous sample
     modMatrix.setSourceValue(ModSource::LFO1, lfo1.getCurrentValue());
     modMatrix.setSourceValue(ModSource::LFO2, lfo2.getCurrentValue());
     
@@ -171,13 +241,19 @@ float KndlSynth::processSample()
     voiceManager.setFilterResoMod(modMatrix.getModulationAmount(ModDestination::FilterResonance));
     voiceManager.setAmpLevelMod(modMatrix.getModulationAmount(ModDestination::AmpLevel));
     
+    // New mod destinations
+    voiceManager.setNoiseLevelMod(modMatrix.getModulationAmount(ModDestination::NoiseLevel));
+    voiceManager.setRingModMixMod(modMatrix.getModulationAmount(ModDestination::RingModMix));
+    
+    // Pan modulation (stored in debugInfo for processBlock to use)
+    debugInfo.panPosition = modMatrix.getModulationAmount(ModDestination::Pan);
+    
     float output = voiceManager.process();
     
     // Normalize polyphonic sum to prevent volume explosion with many voices
     int activeVoices = voiceManager.getActiveVoiceCount();
     if (activeVoices > 1)
     {
-        // Gentle normalization: sqrt scaling preserves some stacking energy
         float normFactor = 1.0f / std::sqrt(static_cast<float>(activeVoices));
         output *= normFactor;
     }
@@ -223,14 +299,15 @@ float KndlSynth::processSample()
         debugInfo.filterOutput, debugInfo.ampEnvValue
     );
     
-    // Apply effects chain: Distortion -> Chorus -> Delay -> Reverb -> OTT
+    // Apply effects chain: Wavefolder -> Distortion -> Chorus -> Delay -> Reverb -> OTT
+    output = wavefolder.process(output);
     output = distortion.process(output);
     output = chorus.process(output);
     output = delay.process(output);
     output = reverb.process(output);
     output = ott.process(output);
     
-    // NaN/Inf check after effects chain (critical: delay feedback can propagate NaN)
+    // NaN/Inf check after effects chain
     if (!std::isfinite(output))
     {
         Logger::getInstance().logAudioAnomaly("NaN/Inf after effects chain", output);
@@ -315,7 +392,25 @@ void KndlSynth::cacheParameterPointers()
     orbitSyncParam = parameters.getRawParameterValue(ParamID::ORBIT_SYNC);
     orbitNumOutputsParam = parameters.getRawParameterValue(ParamID::ORBIT_NUM_OUTPUTS);
     
+    // Noise
+    noiseTypeParam = parameters.getRawParameterValue(ParamID::NOISE_TYPE);
+    noiseLevelParam = parameters.getRawParameterValue(ParamID::NOISE_LEVEL);
+    
+    // Ring Mod
+    ringModMixParam = parameters.getRawParameterValue(ParamID::RING_MOD_MIX);
+    
+    // Unison
+    unisonVoicesParam = parameters.getRawParameterValue(ParamID::UNISON_VOICES);
+    unisonDetuneParam = parameters.getRawParameterValue(ParamID::UNISON_DETUNE);
+    
+    // Stereo
+    stereoWidthParam = parameters.getRawParameterValue(ParamID::STEREO_WIDTH);
+    
     // Effects
+    wfoldEnableParam = parameters.getRawParameterValue(ParamID::WFOLD_ENABLE);
+    wfoldAmountParam = parameters.getRawParameterValue(ParamID::WFOLD_AMOUNT);
+    wfoldMixParam = parameters.getRawParameterValue(ParamID::WFOLD_MIX);
+    
     distortionEnableParam = parameters.getRawParameterValue(ParamID::DIST_ENABLE);
     distortionDriveParam = parameters.getRawParameterValue(ParamID::DIST_DRIVE);
     distortionMixParam = parameters.getRawParameterValue(ParamID::DIST_MIX);
@@ -367,6 +462,17 @@ void KndlSynth::updateParametersFromAPVTS()
     voiceManager.setSubLevel(*subLevelParam);
     voiceManager.setSubOctave(static_cast<int>(*subOctaveParam));
     
+    // Noise
+    voiceManager.setNoiseType(static_cast<NoiseType>(static_cast<int>(*noiseTypeParam)));
+    voiceManager.setNoiseLevel(*noiseLevelParam);
+    
+    // Ring Mod
+    voiceManager.setRingModMix(*ringModMixParam);
+    
+    // Unison
+    voiceManager.setUnisonVoices(static_cast<int>(*unisonVoicesParam));
+    voiceManager.setUnisonDetune(*unisonDetuneParam);
+    
     voiceManager.setFilterCutoff(*filterCutoffParam);
     voiceManager.setFilterResonance(*filterResonanceParam);
     voiceManager.setFilterType(static_cast<FilterType>(static_cast<int>(*filterTypeParam)));
@@ -397,6 +503,10 @@ void KndlSynth::updateParametersFromAPVTS()
     masterGain.setTargetValue(gainLinear);
     
     // Update effects
+    wavefolder.setEnabled(*wfoldEnableParam > 0.5f);
+    wavefolder.setAmount(*wfoldAmountParam);
+    wavefolder.setMix(*wfoldMixParam);
+    
     distortion.setEnabled(*distortionEnableParam > 0.5f);
     distortion.setDrive(*distortionDriveParam);
     distortion.setMix(*distortionMixParam);
@@ -433,4 +543,3 @@ void KndlSynth::updateParametersFromAPVTS()
 }
 
 } // namespace kndl
-

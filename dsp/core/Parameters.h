@@ -127,6 +127,25 @@ namespace ParamID {
     inline constexpr const char* ORBIT_RATE = "orbit_rate";
     inline constexpr const char* ORBIT_SYNC = "orbit_sync";
     inline constexpr const char* ORBIT_NUM_OUTPUTS = "orbit_num_outputs";
+    
+    // Noise Oscillator
+    inline constexpr const char* NOISE_TYPE = "noise_type";
+    inline constexpr const char* NOISE_LEVEL = "noise_level";
+    
+    // Ring Modulation
+    inline constexpr const char* RING_MOD_MIX = "ring_mod_mix";
+    
+    // Unison
+    inline constexpr const char* UNISON_VOICES = "unison_voices";
+    inline constexpr const char* UNISON_DETUNE = "unison_detune";
+    
+    // Wavefolder
+    inline constexpr const char* WFOLD_ENABLE = "wfold_enable";
+    inline constexpr const char* WFOLD_AMOUNT = "wfold_amount";
+    inline constexpr const char* WFOLD_MIX = "wfold_mix";
+    
+    // Stereo
+    inline constexpr const char* STEREO_WIDTH = "stereo_width";
 }
 
 // Waveform types
@@ -498,8 +517,8 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     ));
     
     // === MODULATION MATRIX (8 slots) ===
-    juce::StringArray modSourceNames {"None", "LFO1", "LFO2", "AmpEnv", "FilterEnv", "Velocity", "ModWheel", "Aftertouch", "Orb.A", "Orb.B", "Orb.C", "Orb.D"};
-    juce::StringArray modDestNames {"None", "Osc1Pitch", "Osc2Pitch", "Osc1Level", "Osc2Level", "SubLevel", "FilterCutoff", "FilterReso", "AmpLevel", "LFO1Rate", "LFO2Rate"};
+    juce::StringArray modSourceNames {"None", "LFO1", "LFO2", "AmpEnv", "FilterEnv", "Velocity", "ModWheel", "Aftertouch", "Orb.A", "Orb.B", "Orb.C", "Orb.D", "Noise"};
+    juce::StringArray modDestNames {"None", "Osc1Pitch", "Osc2Pitch", "Osc1Level", "Osc2Level", "SubLevel", "FilterCutoff", "FilterReso", "AmpLevel", "LFO1Rate", "LFO2Rate", "NoiseLevel", "RingMod", "Pan"};
     
     for (int i = 0; i < ParamID::NUM_MOD_SLOTS; ++i)
     {
@@ -517,6 +536,68 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
             juce::NormalisableRange<float>(-1.0f, 1.0f),
             0.0f));
     }
+    
+    // === NOISE OSCILLATOR ===
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID{ParamID::NOISE_TYPE, 1},
+        "Noise Type",
+        juce::StringArray{"White", "Pink", "Crackle"},
+        0
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::NOISE_LEVEL, 1},
+        "Noise Level",
+        juce::NormalisableRange<float>(0.0f, 1.0f),
+        0.0f
+    ));
+    
+    // === RING MODULATION ===
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::RING_MOD_MIX, 1},
+        "Ring Mod Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f),
+        0.0f
+    ));
+    
+    // === UNISON ===
+    params.push_back(std::make_unique<juce::AudioParameterInt>(
+        juce::ParameterID{ParamID::UNISON_VOICES, 1},
+        "Unison Voices",
+        1, 5, 1
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::UNISON_DETUNE, 1},
+        "Unison Detune",
+        juce::NormalisableRange<float>(0.0f, 100.0f),
+        15.0f
+    ));
+    
+    // === WAVEFOLDER ===
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID{ParamID::WFOLD_ENABLE, 1},
+        "Wavefolder Enable",
+        false
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::WFOLD_AMOUNT, 1},
+        "Wavefolder Amount",
+        juce::NormalisableRange<float>(0.0f, 1.0f),
+        0.5f
+    ));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::WFOLD_MIX, 1},
+        "Wavefolder Mix",
+        juce::NormalisableRange<float>(0.0f, 1.0f),
+        0.5f
+    ));
+    
+    // === STEREO ===
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(
+        juce::ParameterID{ParamID::STEREO_WIDTH, 1},
+        "Stereo Width",
+        juce::NormalisableRange<float>(0.0f, 1.0f),
+        0.5f
+    ));
     
     // === ORBIT ===
     params.push_back(std::make_unique<juce::AudioParameterChoice>(

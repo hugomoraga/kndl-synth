@@ -8,12 +8,14 @@
 #include "core/ModulationMatrix.h"
 #include "modulators/LFO.h"
 #include "modulators/Orbit.h"
+#include "oscillators/NoiseGenerator.h"
 #include "effects/Delay.h"
 #include "effects/Chorus.h"
 #include "effects/Distortion.h"
 #include "effects/Reverb.h"
 #include "effects/DCBlocker.h"
 #include "effects/OTT.h"
+#include "effects/Wavefolder.h"
 #include "effects/SafetyLimiter.h"
 
 namespace kndl {
@@ -56,6 +58,12 @@ struct DebugInfo
     // Limiter
     float gainReductionDb = 0.0f;
     bool isLimiting = false;
+    
+    // Noise (for mod source)
+    float noiseModValue = 0.0f;
+    
+    // Stereo pan position (-1 to 1)
+    float panPosition = 0.0f;
     
     // Status flags
     bool hasNaN = false;
@@ -155,12 +163,30 @@ private:
     std::atomic<float>* orbitSyncParam = nullptr;
     std::atomic<float>* orbitNumOutputsParam = nullptr;
     
+    // Noise params
+    std::atomic<float>* noiseTypeParam = nullptr;
+    std::atomic<float>* noiseLevelParam = nullptr;
+    
+    // Ring Mod params
+    std::atomic<float>* ringModMixParam = nullptr;
+    
+    // Unison params
+    std::atomic<float>* unisonVoicesParam = nullptr;
+    std::atomic<float>* unisonDetuneParam = nullptr;
+    
+    // Stereo params
+    std::atomic<float>* stereoWidthParam = nullptr;
+    
     // Mod matrix params (8 slots × 3)
     std::array<std::atomic<float>*, 8> modSrcParams {};
     std::array<std::atomic<float>*, 8> modDstParams {};
     std::array<std::atomic<float>*, 8> modAmtParams {};
     
+    // Noise mod source generator (global, not per-voice, for S&H mod)
+    NoiseGenerator noiseModSource;
+    
     // Effects
+    Wavefolder wavefolder;
     Distortion distortion;
     Chorus chorus;
     Delay delay;
@@ -198,6 +224,15 @@ private:
     std::atomic<float>* ottDepthParam = nullptr;
     std::atomic<float>* ottTimeParam = nullptr;
     std::atomic<float>* ottMixParam = nullptr;
+    
+    std::atomic<float>* wfoldEnableParam = nullptr;
+    std::atomic<float>* wfoldAmountParam = nullptr;
+    std::atomic<float>* wfoldMixParam = nullptr;
+    
+    // Stereo width: allpass decorrelation for R channel
+    std::vector<float> widthDelayBuffer;
+    size_t widthDelayWriteIdx = 0;
+    size_t widthDelaySamples = 0;
     
     // Debug info (updated each sample for display)
     DebugInfo debugInfo;
