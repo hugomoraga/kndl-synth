@@ -118,3 +118,37 @@ target_link_libraries(KndlSynth PRIVATE
     juce::juce_recommended_warning_flags
 )
 
+# ============================================================================
+# Test Runner
+# ============================================================================
+juce_add_console_app(KndlSynthTests
+    PRODUCT_NAME "KndlSynthTests"
+)
+
+juce_generate_juce_header(KndlSynthTests)
+
+target_sources(KndlSynthTests PRIVATE
+    tests/TestMain.cpp
+    tests/DSPTests.cpp
+    
+    # DSP sources under test
+    dsp/core/Voice.cpp
+)
+
+target_include_directories(KndlSynthTests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_compile_definitions(KndlSynthTests PRIVATE
+    JUCE_WEB_BROWSER=0
+    JUCE_USE_CURL=0
+    JUCE_UNIT_TESTS=1
+)
+
+target_link_libraries(KndlSynthTests PRIVATE
+    juce::juce_audio_utils
+    juce::juce_dsp
+    juce::juce_recommended_config_flags
+    juce::juce_recommended_warning_flags
+)
+

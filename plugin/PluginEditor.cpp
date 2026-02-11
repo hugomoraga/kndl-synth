@@ -191,18 +191,21 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     auto& apvts = audioProcessor.getAPVTS();
     
     // OSC1 attachments
+    osc1EnableAttachment = std::make_unique<ButtonAttachment>(apvts, kndl::ParamID::OSC1_ENABLE, osc1Section.getEnableButton());
     osc1LevelAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OSC1_LEVEL, osc1Section.getLevelSlider());
     osc1DetuneAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OSC1_DETUNE, osc1Section.getDetuneSlider());
     osc1OctaveAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OSC1_OCTAVE, osc1Section.getOctaveSlider());
     osc1WaveformAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::OSC1_WAVEFORM, osc1Section.getWaveformSelector());
     
     // OSC2 attachments
+    osc2EnableAttachment = std::make_unique<ButtonAttachment>(apvts, kndl::ParamID::OSC2_ENABLE, osc2Section.getEnableButton());
     osc2LevelAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OSC2_LEVEL, osc2Section.getLevelSlider());
     osc2DetuneAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OSC2_DETUNE, osc2Section.getDetuneSlider());
     osc2OctaveAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OSC2_OCTAVE, osc2Section.getOctaveSlider());
     osc2WaveformAttachment = std::make_unique<ComboBoxAttachment>(apvts, kndl::ParamID::OSC2_WAVEFORM, osc2Section.getWaveformSelector());
     
     // Sub attachments
+    subEnableAttachment = std::make_unique<ButtonAttachment>(apvts, kndl::ParamID::SUB_ENABLE, subSection.getEnableButton());
     subLevelAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::SUB_LEVEL, subSection.getLevelSlider());
     subOctaveAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::SUB_OCTAVE, subSection.getOctaveSlider());
     
@@ -585,8 +588,8 @@ void KndlSynthAudioProcessorEditor::resized()
     osc2Section.setBounds(oscs[1]);
     subSection.setBounds(oscs[2]);
     
-    // Center column: Filter on top, Modulators below
-    auto center = mid.sub(1).rows({ fr(80), fr(20) });
+    // Center column: Filter on top, Modulators below (1/3 height = same as sub osc row)
+    auto center = mid.sub(1).rows({ fr(2), fr(1) });
     layoutFilter(center[0]);
     layoutModulators(center[1]);
     
@@ -795,7 +798,7 @@ void KndlSynthAudioProcessorEditor::layoutMonitor(juce::Rectangle<int> area)
         area.getX() + 10, area.getY() + 28,
         area.getWidth() - 20, area.getHeight() - 36);
     
-    auto parts = KndlGrid(content, 6).cols({ 3, 2, 2, 5 });
+    auto parts = KndlGrid(content, 6).cols({ 2, 2, 2, 5 });
     waveScope.setBounds(parts[0].reduced(2));
     filterDisplay.setBounds(parts[1].reduced(2));
     spellbookScope.setBounds(parts[2].reduced(2));

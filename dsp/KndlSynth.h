@@ -98,16 +98,19 @@ private:
     float modWheelValue = 0.0f;
     
     // Parameter pointers (cached for performance)
+    std::atomic<float>* osc1EnableParam = nullptr;
     std::atomic<float>* osc1WaveformParam = nullptr;
     std::atomic<float>* osc1LevelParam = nullptr;
     std::atomic<float>* osc1DetuneParam = nullptr;
     std::atomic<float>* osc1OctaveParam = nullptr;
     
+    std::atomic<float>* osc2EnableParam = nullptr;
     std::atomic<float>* osc2WaveformParam = nullptr;
     std::atomic<float>* osc2LevelParam = nullptr;
     std::atomic<float>* osc2DetuneParam = nullptr;
     std::atomic<float>* osc2OctaveParam = nullptr;
     
+    std::atomic<float>* subEnableParam = nullptr;
     std::atomic<float>* subLevelParam = nullptr;
     std::atomic<float>* subOctaveParam = nullptr;
     

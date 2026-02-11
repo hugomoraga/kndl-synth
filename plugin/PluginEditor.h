@@ -117,20 +117,24 @@ private:
     // Parameter attachments
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
+    using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
     
     // OSC1 attachments
+    std::unique_ptr<ButtonAttachment> osc1EnableAttachment;
     std::unique_ptr<SliderAttachment> osc1LevelAttachment;
     std::unique_ptr<SliderAttachment> osc1DetuneAttachment;
     std::unique_ptr<SliderAttachment> osc1OctaveAttachment;
     std::unique_ptr<ComboBoxAttachment> osc1WaveformAttachment;
     
     // OSC2 attachments
+    std::unique_ptr<ButtonAttachment> osc2EnableAttachment;
     std::unique_ptr<SliderAttachment> osc2LevelAttachment;
     std::unique_ptr<SliderAttachment> osc2DetuneAttachment;
     std::unique_ptr<SliderAttachment> osc2OctaveAttachment;
     std::unique_ptr<ComboBoxAttachment> osc2WaveformAttachment;
     
     // Sub attachments
+    std::unique_ptr<ButtonAttachment> subEnableAttachment;
     std::unique_ptr<SliderAttachment> subLevelAttachment;
     std::unique_ptr<SliderAttachment> subOctaveAttachment;
     
@@ -177,8 +181,6 @@ private:
     kndl::ui::KndlEffectSection ottSection { "OTT", {"DEPTH", "TIME", "MIX"} };
     
     // Effect attachments
-    using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
-    
     std::unique_ptr<ButtonAttachment> distEnableAttachment;
     std::unique_ptr<SliderAttachment> distDriveAttachment;
     std::unique_ptr<SliderAttachment> distMixAttachment;

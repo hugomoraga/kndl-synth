@@ -47,16 +47,19 @@ public:
     const VoiceDebugInfo& getDebugInfo() const { return debugInfo; }
     
     // === Setters para parámetros ===
+    void setOsc1Enable(bool enabled) { osc1Enabled = enabled; }
     void setOsc1Waveform(Waveform wf) { osc1.setWaveform(wf); }
     void setOsc1Level(float level) { osc1Level = level; }
     void setOsc1Detune(float cents);
     void setOsc1Octave(int oct);
     
+    void setOsc2Enable(bool enabled) { osc2Enabled = enabled; }
     void setOsc2Waveform(Waveform wf) { osc2.setWaveform(wf); }
     void setOsc2Level(float level) { osc2Level = level; }
     void setOsc2Detune(float cents);
     void setOsc2Octave(int oct);
     
+    void setSubEnable(bool enabled) { subEnabled = enabled; }
     void setSubLevel(float level) { subLevel = level; }
     void setSubOctave(int oct);
     
@@ -111,14 +114,17 @@ private:
     float baseFrequency = 440.0f;
     
     // Parámetros de osciladores
+    bool osc1Enabled = true;
     float osc1Level = 0.8f;
     float osc1Detune = 0.0f;
     int osc1Octave = 0;
     
+    bool osc2Enabled = false;
     float osc2Level = 0.0f;
     float osc2Detune = 0.0f;
     int osc2Octave = 0;
     
+    bool subEnabled = false;
     float subLevel = 0.0f;
     
     // Parámetros de filtro

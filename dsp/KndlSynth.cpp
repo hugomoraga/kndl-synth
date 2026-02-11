@@ -257,16 +257,19 @@ float KndlSynth::processSample()
 
 void KndlSynth::cacheParameterPointers()
 {
+    osc1EnableParam = parameters.getRawParameterValue(ParamID::OSC1_ENABLE);
     osc1WaveformParam = parameters.getRawParameterValue(ParamID::OSC1_WAVEFORM);
     osc1LevelParam = parameters.getRawParameterValue(ParamID::OSC1_LEVEL);
     osc1DetuneParam = parameters.getRawParameterValue(ParamID::OSC1_DETUNE);
     osc1OctaveParam = parameters.getRawParameterValue(ParamID::OSC1_OCTAVE);
     
+    osc2EnableParam = parameters.getRawParameterValue(ParamID::OSC2_ENABLE);
     osc2WaveformParam = parameters.getRawParameterValue(ParamID::OSC2_WAVEFORM);
     osc2LevelParam = parameters.getRawParameterValue(ParamID::OSC2_LEVEL);
     osc2DetuneParam = parameters.getRawParameterValue(ParamID::OSC2_DETUNE);
     osc2OctaveParam = parameters.getRawParameterValue(ParamID::OSC2_OCTAVE);
     
+    subEnableParam = parameters.getRawParameterValue(ParamID::SUB_ENABLE);
     subLevelParam = parameters.getRawParameterValue(ParamID::SUB_LEVEL);
     subOctaveParam = parameters.getRawParameterValue(ParamID::SUB_OCTAVE);
     
@@ -342,16 +345,19 @@ void KndlSynth::cacheParameterPointers()
 
 void KndlSynth::updateParametersFromAPVTS()
 {
+    voiceManager.setOsc1Enable(*osc1EnableParam > 0.5f);
     voiceManager.setOsc1Waveform(static_cast<Waveform>(static_cast<int>(*osc1WaveformParam)));
     voiceManager.setOsc1Level(*osc1LevelParam);
     voiceManager.setOsc1Detune(*osc1DetuneParam);
     voiceManager.setOsc1Octave(static_cast<int>(*osc1OctaveParam));
     
+    voiceManager.setOsc2Enable(*osc2EnableParam > 0.5f);
     voiceManager.setOsc2Waveform(static_cast<Waveform>(static_cast<int>(*osc2WaveformParam)));
     voiceManager.setOsc2Level(*osc2LevelParam);
     voiceManager.setOsc2Detune(*osc2DetuneParam);
     voiceManager.setOsc2Octave(static_cast<int>(*osc2OctaveParam));
     
+    voiceManager.setSubEnable(*subEnableParam > 0.5f);
     voiceManager.setSubLevel(*subLevelParam);
     voiceManager.setSubOctave(static_cast<int>(*subOctaveParam));
     

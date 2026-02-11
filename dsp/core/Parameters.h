@@ -7,18 +7,21 @@ namespace kndl {
 // Parameter IDs - centralizados para evitar typos
 namespace ParamID {
     // Oscillator 1
+    inline constexpr const char* OSC1_ENABLE = "osc1_enable";
     inline constexpr const char* OSC1_WAVEFORM = "osc1_waveform";
     inline constexpr const char* OSC1_LEVEL = "osc1_level";
     inline constexpr const char* OSC1_DETUNE = "osc1_detune";
     inline constexpr const char* OSC1_OCTAVE = "osc1_octave";
     
     // Oscillator 2
+    inline constexpr const char* OSC2_ENABLE = "osc2_enable";
     inline constexpr const char* OSC2_WAVEFORM = "osc2_waveform";
     inline constexpr const char* OSC2_LEVEL = "osc2_level";
     inline constexpr const char* OSC2_DETUNE = "osc2_detune";
     inline constexpr const char* OSC2_OCTAVE = "osc2_octave";
     
     // Sub Oscillator
+    inline constexpr const char* SUB_ENABLE = "sub_enable";
     inline constexpr const char* SUB_LEVEL = "sub_level";
     inline constexpr const char* SUB_OCTAVE = "sub_octave";
     
@@ -155,6 +158,11 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
     // === OSCILLATOR 1 ===
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID{ParamID::OSC1_ENABLE, 1},
+        "Osc1 Enable",
+        true  // ON by default
+    ));
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
         juce::ParameterID{ParamID::OSC1_WAVEFORM, 1},
         "Osc1 Waveform",
@@ -180,6 +188,11 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     ));
     
     // === OSCILLATOR 2 ===
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID{ParamID::OSC2_ENABLE, 1},
+        "Osc2 Enable",
+        false  // OFF by default (level starts at 0)
+    ));
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
         juce::ParameterID{ParamID::OSC2_WAVEFORM, 1},
         "Osc2 Waveform",
@@ -205,6 +218,11 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
     ));
     
     // === SUB OSCILLATOR ===
+    params.push_back(std::make_unique<juce::AudioParameterBool>(
+        juce::ParameterID{ParamID::SUB_ENABLE, 1},
+        "Sub Enable",
+        false  // OFF by default
+    ));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(
         juce::ParameterID{ParamID::SUB_LEVEL, 1},
         "Sub Level",

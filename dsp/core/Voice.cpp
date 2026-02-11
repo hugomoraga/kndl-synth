@@ -54,9 +54,9 @@ float Voice::process()
     if (!isActive)
         return 0.0f;
     
-    float osc1Out = osc1.process() * juce::jlimit(0.0f, 1.0f, osc1Level + osc1LevelMod);
-    float osc2Out = osc2.process() * juce::jlimit(0.0f, 1.0f, osc2Level + osc2LevelMod);
-    float subOut = subOsc.process() * juce::jlimit(0.0f, 1.0f, subLevel + subLevelMod);
+    float osc1Out = osc1Enabled ? osc1.process() * juce::jlimit(0.0f, 1.0f, osc1Level + osc1LevelMod) : 0.0f;
+    float osc2Out = osc2Enabled ? osc2.process() * juce::jlimit(0.0f, 1.0f, osc2Level + osc2LevelMod) : 0.0f;
+    float subOut  = subEnabled  ? subOsc.process() * juce::jlimit(0.0f, 1.0f, subLevel + subLevelMod) : 0.0f;
     
     float mixed = osc1Out + osc2Out + subOut;
     

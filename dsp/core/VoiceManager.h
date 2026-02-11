@@ -115,16 +115,19 @@ public:
     
     // === Aplicar parámetros a todas las voces ===
     
+    void setOsc1Enable(bool enabled) { for (auto& v : voices) v.setOsc1Enable(enabled); }
     void setOsc1Waveform(Waveform wf) { for (auto& v : voices) v.setOsc1Waveform(wf); }
     void setOsc1Level(float level) { for (auto& v : voices) v.setOsc1Level(level); }
     void setOsc1Detune(float cents) { for (auto& v : voices) v.setOsc1Detune(cents); }
     void setOsc1Octave(int oct) { for (auto& v : voices) v.setOsc1Octave(oct); }
     
+    void setOsc2Enable(bool enabled) { for (auto& v : voices) v.setOsc2Enable(enabled); }
     void setOsc2Waveform(Waveform wf) { for (auto& v : voices) v.setOsc2Waveform(wf); }
     void setOsc2Level(float level) { for (auto& v : voices) v.setOsc2Level(level); }
     void setOsc2Detune(float cents) { for (auto& v : voices) v.setOsc2Detune(cents); }
     void setOsc2Octave(int oct) { for (auto& v : voices) v.setOsc2Octave(oct); }
     
+    void setSubEnable(bool enabled) { for (auto& v : voices) v.setSubEnable(enabled); }
     void setSubLevel(float level) { for (auto& v : voices) v.setSubLevel(level); }
     void setSubOctave(int oct) { for (auto& v : voices) v.setSubOctave(oct); }
     
