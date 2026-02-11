@@ -173,12 +173,16 @@ private:
     // Master gain attachment
     std::unique_ptr<SliderAttachment> masterGainAttachment;
     
-    // Effects sections
+    // Effects sections (tabbed)
     kndl::ui::KndlEffectSection distortionSection { "DIST", {"DRV", "MIX"} };
     kndl::ui::KndlEffectSection chorusSection { "CHORUS", {"RATE", "DPT", "MIX"} };
     kndl::ui::KndlEffectSection delaySection { "DELAY", {"TIME", "FB", "MIX"} };
     kndl::ui::KndlEffectSection reverbSection { "REVERB", {"SIZE", "DMP", "MIX"} };
     kndl::ui::KndlEffectSection ottSection { "OTT", {"DEPTH", "TIME", "MIX"} };
+    
+    int selectedFxTab = 0;
+    std::array<juce::TextButton, 5> fxTabButtons;
+    void selectFxTab(int index);
     
     // Effect attachments
     std::unique_ptr<ButtonAttachment> distEnableAttachment;
