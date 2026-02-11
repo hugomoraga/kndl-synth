@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Fremen Whisper" version="1.0" category="Cinematic">
+  <PARAM id="osc1_waveform" value="2"/><PARAM id="osc1_level" value="0.4"/><PARAM id="osc1_detune" value="25"/><PARAM id="osc1_octave" value="1"/>
+  <PARAM id="osc2_waveform" value="2"/><PARAM id="osc2_level" value="0.4"/><PARAM id="osc2_detune" value="-25"/><PARAM id="osc2_octave" value="1"/>
+  <PARAM id="sub_level" value="0.15"/><PARAM id="sub_octave" value="0"/>
+  <PARAM id="filter_cutoff" value="2800"/><PARAM id="filter_resonance" value="0.65"/><PARAM id="filter_type" value="0"/><PARAM id="filter_drive" value="0.05"/><PARAM id="filter_env_amount" value="-0.3"/>
+  <PARAM id="filter_mode" value="3"/>
+  <PARAM id="amp_attack" value="0.8"/><PARAM id="amp_decay" value="2.0"/><PARAM id="amp_sustain" value="0.3"/><PARAM id="amp_release" value="6.0"/>
+  <PARAM id="filter_attack" value="0.5"/><PARAM id="filter_decay" value="3.0"/><PARAM id="filter_sustain" value="0.2"/><PARAM id="filter_release" value="4.0"/>
+  <PARAM id="lfo1_rate" value="0.25"/><PARAM id="lfo1_waveform" value="0"/><PARAM id="lfo2_rate" value="3.5"/><PARAM id="lfo2_waveform" value="2"/>
+  <PARAM id="orbit_shape" value="1"/><PARAM id="orbit_rate" value="0.18"/>
+  <PARAM id="mod_1_src" value="1"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.35"/>
+  <PARAM id="mod_2_src" value="2"/><PARAM id="mod_2_dst" value="3"/><PARAM id="mod_2_amt" value="0.5"/>
+  <PARAM id="mod_3_src" value="2"/><PARAM id="mod_3_dst" value="4"/><PARAM id="mod_3_amt" value="-0.5"/>
+  <PARAM id="mod_4_src" value="8"/><PARAM id="mod_4_dst" value="7"/><PARAM id="mod_4_amt" value="0.4"/>
+  <PARAM id="mod_5_src" value="9"/><PARAM id="mod_5_dst" value="10"/><PARAM id="mod_5_amt" value="0.3"/>
+  <PARAM id="mod_6_src" value="3"/><PARAM id="mod_6_dst" value="8"/><PARAM id="mod_6_amt" value="0.4"/>
+  <PARAM id="master_gain" value="-5"/>
+  <PARAM id="dist_enable" value="0"/>
+  <PARAM id="chorus_enable" value="1"/><PARAM id="chorus_rate" value="0.3"/><PARAM id="chorus_depth" value="0.5"/><PARAM id="chorus_mix" value="0.3"/>
+  <PARAM id="delay_enable" value="1"/><PARAM id="delay_time" value="450"/><PARAM id="delay_feedback" value="0.6"/><PARAM id="delay_mix" value="0.35"/>
+  <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.88"/><PARAM id="reverb_damp" value="0.5"/><PARAM id="reverb_mix" value="0.5"/>
+</Parameters>
