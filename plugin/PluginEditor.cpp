@@ -105,12 +105,23 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     addAndMakeVisible(*modMatrixDisplay);
     modMatrixDisplay->connectToAPVTS(audioProcessor.getAPVTS());
     
-    // Add effect sections
+    // Add effect sections (all visible, tab system hides inactive)
     addAndMakeVisible(distortionSection);
     addAndMakeVisible(chorusSection);
     addAndMakeVisible(delaySection);
     addAndMakeVisible(reverbSection);
     addAndMakeVisible(ottSection);
+    
+    // FX tab buttons
+    const juce::String fxTabNames[] = { "DIST", "CHORUS", "DELAY", "REVERB", "OTT" };
+    for (int i = 0; i < 5; ++i)
+    {
+        fxTabButtons[static_cast<size_t>(i)].setButtonText(fxTabNames[i]);
+        fxTabButtons[static_cast<size_t>(i)].setClickingTogglesState(false);
+        fxTabButtons[static_cast<size_t>(i)].onClick = [this, i]() { selectFxTab(i); };
+        addAndMakeVisible(fxTabButtons[static_cast<size_t>(i)]);
+    }
+    selectFxTab(0);
     
     // Add preset selector
     addAndMakeVisible(presetSelector);
@@ -270,7 +281,7 @@ KndlSynthAudioProcessorEditor::KndlSynthAudioProcessorEditor (KndlSynthAudioProc
     ottMixAttachment = std::make_unique<SliderAttachment>(apvts, kndl::ParamID::OTT_MIX, ottSection.getKnob(2));
     
     // Set size
-    setSize (1000, 750);
+    setSize (1000, 820);
     startTimerHz(30);
 }
 
@@ -359,6 +370,9 @@ void KndlSynthAudioProcessorEditor::applyThemeToAllComponents()
     reverbSection.setTheme(currentTheme);
     ottSection.setTheme(currentTheme);
     
+    // FX tab buttons styling
+    selectFxTab(selectedFxTab);
+    
     // Preset selector
     presetSelector.setTheme(currentTheme);
     
@@ -439,6 +453,21 @@ void KndlSynthAudioProcessorEditor::timerCallback()
     dataDisplay.setOutputLevel(cachedDebugInfo.masterOutput);
     
     waveScope.pushSample(cachedDebugInfo.masterOutput);
+    
+    // Update FX tab ON/OFF indicators
+    if (currentTheme)
+    {
+        kndl::ui::KndlEffectSection* fxSections[] = {
+            &distortionSection, &chorusSection, &delaySection, &reverbSection, &ottSection
+        };
+        for (int i = 0; i < 5; ++i)
+        {
+            if (i == selectedFxTab) continue;
+            bool isOn = fxSections[i]->getEnableButton().getToggleState();
+            fxTabButtons[static_cast<size_t>(i)].setColour(juce::TextButton::textColourOffId,
+                isOn ? currentTheme->getAccentSecondary() : currentTheme->getTextMuted());
+        }
+    }
     
     // Update filter display with mode awareness
     auto& apvts = audioProcessor.getAPVTS();
@@ -761,13 +790,13 @@ void KndlSynthAudioProcessorEditor::layoutModulators(juce::Rectangle<int> area)
         auto c = cols[0];
         int knobSize = juce::jmin(38, c.getWidth() - 4);
         int knobH = knobSize + 12;
-        int selH = 18;
-        int totalH = knobH + 2 + selH;
+        int selH = 20;
+        int totalH = knobH + 4 + selH;
         int startY = c.getY() + (c.getHeight() - totalH) / 2;
         int cx = c.getX() + (c.getWidth() - knobSize) / 2;
         lfo1RateKnob.setBounds(cx, startY, knobSize, knobH);
-        int selW = juce::jmin(knobSize + 8, c.getWidth());
-        lfo1WaveformSelector.setBounds(c.getX() + (c.getWidth() - selW) / 2, startY + knobH + 2, selW, selH);
+        int selW = c.getWidth() - 4;
+        lfo1WaveformSelector.setBounds(c.getX() + 2, startY + knobH + 4, selW, selH);
     }
     
     // LFO2: same layout
@@ -775,13 +804,13 @@ void KndlSynthAudioProcessorEditor::layoutModulators(juce::Rectangle<int> area)
         auto c = cols[1];
         int knobSize = juce::jmin(38, c.getWidth() - 4);
         int knobH = knobSize + 12;
-        int selH = 18;
-        int totalH = knobH + 2 + selH;
+        int selH = 20;
+        int totalH = knobH + 4 + selH;
         int startY = c.getY() + (c.getHeight() - totalH) / 2;
         int cx = c.getX() + (c.getWidth() - knobSize) / 2;
         lfo2RateKnob.setBounds(cx, startY, knobSize, knobH);
-        int selW = juce::jmin(knobSize + 8, c.getWidth());
-        lfo2WaveformSelector.setBounds(c.getX() + (c.getWidth() - selW) / 2, startY + knobH + 2, selW, selH);
+        int selW = c.getWidth() - 4;
+        lfo2WaveformSelector.setBounds(c.getX() + 2, startY + knobH + 4, selW, selH);
     }
     
     // Orbit shape selector (centered vertically)
@@ -803,16 +832,67 @@ void KndlSynthAudioProcessorEditor::layoutModulators(juce::Rectangle<int> area)
     }
 }
 
+void KndlSynthAudioProcessorEditor::selectFxTab(int index)
+{
+    selectedFxTab = juce::jlimit(0, 4, index);
+    
+    kndl::ui::KndlEffectSection* sections[] = {
+        &distortionSection, &chorusSection, &delaySection, &reverbSection, &ottSection
+    };
+    
+    for (int i = 0; i < 5; ++i)
+    {
+        sections[i]->setVisible(i == selectedFxTab);
+        
+        // Update tab button appearance
+        if (currentTheme)
+        {
+            bool isSelected = (i == selectedFxTab);
+            bool isOn = sections[i]->getEnableButton().getToggleState();
+            
+            auto& btn = fxTabButtons[static_cast<size_t>(i)];
+            
+            if (isSelected)
+            {
+                btn.setColour(juce::TextButton::buttonColourId, currentTheme->getAccentPrimary().withAlpha(0.25f));
+                btn.setColour(juce::TextButton::textColourOffId, currentTheme->getTextPrimary());
+            }
+            else
+            {
+                btn.setColour(juce::TextButton::buttonColourId, currentTheme->getPanelBackground().withAlpha(0.5f));
+                btn.setColour(juce::TextButton::textColourOffId,
+                    isOn ? currentTheme->getAccentSecondary() : currentTheme->getTextMuted());
+            }
+        }
+    }
+    
+    resized();
+    repaint();
+}
+
 void KndlSynthAudioProcessorEditor::layoutEffects(juce::Rectangle<int> area)
 {
     using namespace kndl::ui;
-    auto fx = KndlGrid(area, 6).equalRows(5);
     
-    distortionSection.setBounds(fx[0]);
-    chorusSection.setBounds(fx[1]);
-    delaySection.setBounds(fx[2]);
-    reverbSection.setBounds(fx[3]);
-    ottSection.setBounds(fx[4]);
+    // Tab bar at top
+    int tabH = 22;
+    auto tabBar = area.removeFromTop(tabH);
+    int tabW = tabBar.getWidth() / 5;
+    
+    for (int i = 0; i < 5; ++i)
+    {
+        fxTabButtons[static_cast<size_t>(i)].setBounds(
+            tabBar.getX() + i * tabW, tabBar.getY(), tabW, tabH);
+    }
+    
+    // Content: only the selected section fills the remaining space
+    auto content = area.reduced(0, 2);
+    
+    kndl::ui::KndlEffectSection* sections[] = {
+        &distortionSection, &chorusSection, &delaySection, &reverbSection, &ottSection
+    };
+    
+    sections[selectedFxTab]->setBounds(content);
 }
 
 void KndlSynthAudioProcessorEditor::layoutMonitor(juce::Rectangle<int> area)

@@ -101,20 +101,25 @@ public:
         auto bounds = getLocalBounds();
         
         // Header area
-        auto header = bounds.removeFromTop(26);
+        int headerH = bounds.getHeight() > 120 ? 32 : 26;
+        auto header = bounds.removeFromTop(headerH);
         header.removeFromLeft(80);  // Space for title
-        enableButton.setBounds(header.removeFromRight(40).reduced(4, 4));
+        enableButton.setBounds(header.removeFromRight(50).reduced(4, 4));
         
         // Knobs area
-        auto content = bounds.reduced(4, 2);
+        auto content = bounds.reduced(6, 4);
         
         if (knobs.empty()) return;
         
-        int knobSize = 36;
-        int knobHeight = knobSize + 14;
-        int knobGap = 4;
+        // Dynamically size knobs based on available space
+        int numKnobs = static_cast<int>(knobs.size());
+        int knobGap = content.getHeight() > 80 ? 12 : 4;
+        int maxKnobByWidth = (content.getWidth() - (numKnobs - 1) * knobGap) / numKnobs;
+        int maxKnobByHeight = content.getHeight() - 18;  // Leave room for label
+        int knobSize = juce::jlimit(30, 60, juce::jmin(maxKnobByWidth, maxKnobByHeight));
+        int knobHeight = knobSize + 16;
         
-        int totalWidth = static_cast<int>(knobs.size()) * knobSize + (static_cast<int>(knobs.size()) - 1) * knobGap;
+        int totalWidth = numKnobs * knobSize + (numKnobs - 1) * knobGap;
         int startX = content.getX() + (content.getWidth() - totalWidth) / 2;
         int knobY = content.getY() + (content.getHeight() - knobHeight) / 2;
         
