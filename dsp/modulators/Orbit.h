@@ -7,8 +7,8 @@
 namespace kndl {
 
 /**
- * Spellbook Modulator - Genera múltiples señales moduladoras
- * leyendo la posición de un punto que recorre formas geométricas.
+ * Orbit Modulator - Genera múltiples señales moduladoras
+ * leyendo la posición de un punto que recorre formas geométricas (órbitas).
  * 
  * Características:
  * - 7 formas geométricas (circle, triangle, square, pentagon, star, spiral, lemniscate)
@@ -17,7 +17,7 @@ namespace kndl {
  * - Rango hasta audio-rate
  * - Outputs normalizados -1..+1 o 0..1 configurable
  */
-class Spellbook
+class Orbit
 {
 public:
     enum class Shape
@@ -39,7 +39,7 @@ public:
     
     static constexpr int MAX_OUTPUTS = 16;
     
-    Spellbook()
+    Orbit()
     {
         for (size_t i = 0; i < static_cast<size_t>(MAX_OUTPUTS); ++i)
         {
@@ -158,10 +158,12 @@ private:
             
             case Shape::Triangle:
             {
-                // Equilateral triangle
+                // Equilateral triangle (regular 3-gon polar formula: r = 1/cos(localAngle - π/N))
                 float localAngle = std::fmod(angle, 2.0f * juce::MathConstants<float>::pi / 3.0f);
                 
-                float r = 1.0f / std::cos(localAngle - juce::MathConstants<float>::pi / 6.0f);
+                float cosVal = std::cos(localAngle - juce::MathConstants<float>::pi / 3.0f);
+                float r = (std::abs(cosVal) > 0.001f) ? (1.0f / cosVal) : 1.0f;
+                r = juce::jlimit(-10.0f, 10.0f, r); // Safety clamp
                 x = r * std::cos(angle);
                 y = r * std::sin(angle);
                 break;
@@ -182,10 +184,12 @@ private:
             
             case Shape::Pentagon:
             {
-                // Regular pentagon
+                // Regular pentagon (5-gon polar formula)
                 float localAngle = std::fmod(angle, 2.0f * juce::MathConstants<float>::pi / 5.0f);
                 
-                float r = 1.0f / std::cos(localAngle - juce::MathConstants<float>::pi / 5.0f);
+                float cosVal = std::cos(localAngle - juce::MathConstants<float>::pi / 5.0f);
+                float r = (std::abs(cosVal) > 0.001f) ? (1.0f / cosVal) : 1.0f;
+                r = juce::jlimit(-10.0f, 10.0f, r); // Safety clamp
                 x = r * std::cos(angle);
                 y = r * std::sin(angle);
                 break;

@@ -327,7 +327,7 @@ private:
   <PARAM id="amp_attack" value="0.8"/><PARAM id="amp_decay" value="0.5"/><PARAM id="amp_sustain" value="0.9"/><PARAM id="amp_release" value="1.5"/>
   <PARAM id="filter_attack" value="1.2"/><PARAM id="filter_decay" value="0.8"/><PARAM id="filter_sustain" value="0.6"/><PARAM id="filter_release" value="2.0"/>
   <PARAM id="lfo1_rate" value="0.15"/><PARAM id="lfo1_waveform" value="1"/><PARAM id="lfo2_rate" value="0.08"/><PARAM id="lfo2_waveform" value="0"/>
-  <PARAM id="spellbook_shape" value="0"/><PARAM id="spellbook_rate" value="0.25"/>
+  <PARAM id="orbit_shape" value="0"/><PARAM id="orbit_rate" value="0.25"/>
   <PARAM id="mod_1_src" value="1"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.35"/>
   <PARAM id="mod_2_src" value="8"/><PARAM id="mod_2_dst" value="6"/><PARAM id="mod_2_amt" value="0.2"/>
   <PARAM id="master_gain" value="-4"/>
@@ -350,8 +350,8 @@ private:
   <PARAM id="reverb_enable" value="1"/><PARAM id="reverb_size" value="0.6"/><PARAM id="reverb_damp" value="0.5"/><PARAM id="reverb_mix" value="0.25"/>
 </Parameters>)" },
 
-            { "Spellbook Pad", R"(<?xml version="1.0" encoding="UTF-8"?>
-<Parameters presetName="Spellbook Pad" version="1.0" category="Pad">
+            { "Orbit Pad", R"(<?xml version="1.0" encoding="UTF-8"?>
+<Parameters presetName="Orbit Pad" version="1.0" category="Pad">
   <PARAM id="osc1_waveform" value="0"/><PARAM id="osc1_level" value="0.6"/><PARAM id="osc1_detune" value="-7"/><PARAM id="osc1_octave" value="0"/>
   <PARAM id="osc2_waveform" value="1"/><PARAM id="osc2_level" value="0.5"/><PARAM id="osc2_detune" value="7"/><PARAM id="osc2_octave" value="0"/>
   <PARAM id="sub_level" value="0.4"/><PARAM id="sub_octave" value="-1"/>
@@ -359,7 +359,7 @@ private:
   <PARAM id="amp_attack" value="1.5"/><PARAM id="amp_decay" value="1.0"/><PARAM id="amp_sustain" value="0.85"/><PARAM id="amp_release" value="3.0"/>
   <PARAM id="filter_attack" value="2.0"/><PARAM id="filter_decay" value="1.5"/><PARAM id="filter_sustain" value="0.5"/><PARAM id="filter_release" value="3.5"/>
   <PARAM id="lfo1_rate" value="0.2"/><PARAM id="lfo2_rate" value="0.35"/><PARAM id="lfo2_waveform" value="1"/>
-  <PARAM id="spellbook_shape" value="4"/><PARAM id="spellbook_rate" value="0.12"/>
+  <PARAM id="orbit_shape" value="4"/><PARAM id="orbit_rate" value="0.12"/>
   <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.4"/>
   <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="1"/><PARAM id="mod_2_amt" value="0.15"/>
   <PARAM id="mod_3_src" value="10"/><PARAM id="mod_3_dst" value="4"/><PARAM id="mod_3_amt" value="0.25"/>
@@ -412,7 +412,7 @@ private:
   <PARAM id="amp_attack" value="3.0"/><PARAM id="amp_decay" value="2.0"/><PARAM id="amp_sustain" value="0.9"/><PARAM id="amp_release" value="5.0"/>
   <PARAM id="filter_attack" value="4.0"/><PARAM id="filter_decay" value="3.0"/><PARAM id="filter_sustain" value="0.6"/><PARAM id="filter_release" value="5.0"/>
   <PARAM id="lfo1_rate" value="0.05"/><PARAM id="lfo2_rate" value="0.12"/><PARAM id="lfo2_waveform" value="1"/>
-  <PARAM id="spellbook_shape" value="5"/><PARAM id="spellbook_rate" value="0.07"/>
+  <PARAM id="orbit_shape" value="5"/><PARAM id="orbit_rate" value="0.07"/>
   <PARAM id="mod_1_src" value="8"/><PARAM id="mod_1_dst" value="1"/><PARAM id="mod_1_amt" value="0.2"/>
   <PARAM id="mod_2_src" value="9"/><PARAM id="mod_2_dst" value="2"/><PARAM id="mod_2_amt" value="0.2"/>
   <PARAM id="mod_3_src" value="10"/><PARAM id="mod_3_dst" value="6"/><PARAM id="mod_3_amt" value="0.3"/>
@@ -449,7 +449,7 @@ private:
   <PARAM id="amp_attack" value="0.005"/><PARAM id="amp_decay" value="0.2"/><PARAM id="amp_sustain" value="0.8"/><PARAM id="amp_release" value="0.15"/>
   <PARAM id="filter_attack" value="0.005"/><PARAM id="filter_decay" value="0.3"/><PARAM id="filter_sustain" value="0.2"/><PARAM id="filter_release" value="0.2"/>
   <PARAM id="lfo1_rate" value="4.0"/><PARAM id="lfo1_waveform" value="3"/><PARAM id="lfo2_rate" value="0.25"/><PARAM id="lfo2_waveform" value="2"/>
-  <PARAM id="spellbook_shape" value="2"/><PARAM id="spellbook_rate" value="2.0"/>
+  <PARAM id="orbit_shape" value="2"/><PARAM id="orbit_rate" value="2.0"/>
   <PARAM id="mod_1_src" value="1"/><PARAM id="mod_1_dst" value="6"/><PARAM id="mod_1_amt" value="0.6"/>
   <PARAM id="mod_2_src" value="2"/><PARAM id="mod_2_dst" value="9"/><PARAM id="mod_2_amt" value="0.4"/>
   <PARAM id="mod_3_src" value="8"/><PARAM id="mod_3_dst" value="7"/><PARAM id="mod_3_amt" value="0.25"/>
@@ -468,7 +468,7 @@ private:
   <PARAM id="amp_attack" value="0.01"/><PARAM id="amp_decay" value="0.8"/><PARAM id="amp_sustain" value="0.5"/><PARAM id="amp_release" value="0.6"/>
   <PARAM id="filter_attack" value="0.01"/><PARAM id="filter_decay" value="0.5"/><PARAM id="filter_sustain" value="0.3"/><PARAM id="filter_release" value="0.5"/>
   <PARAM id="lfo1_rate" value="3.0"/><PARAM id="lfo2_rate" value="0.6"/><PARAM id="lfo2_waveform" value="1"/>
-  <PARAM id="spellbook_shape" value="6"/><PARAM id="spellbook_rate" value="0.3"/>
+  <PARAM id="orbit_shape" value="6"/><PARAM id="orbit_rate" value="0.3"/>
   <PARAM id="mod_1_src" value="1"/><PARAM id="mod_1_dst" value="1"/><PARAM id="mod_1_amt" value="0.08"/>
   <PARAM id="mod_2_src" value="8"/><PARAM id="mod_2_dst" value="6"/><PARAM id="mod_2_amt" value="0.2"/>
   <PARAM id="mod_3_src" value="9"/><PARAM id="mod_3_dst" value="3"/><PARAM id="mod_3_amt" value="0.15"/>
@@ -488,7 +488,7 @@ private:
   <PARAM id="amp_attack" value="0.001"/><PARAM id="amp_decay" value="1.5"/><PARAM id="amp_sustain" value="0.0"/><PARAM id="amp_release" value="1.0"/>
   <PARAM id="filter_attack" value="0.001"/><PARAM id="filter_decay" value="1.0"/><PARAM id="filter_sustain" value="0.1"/><PARAM id="filter_release" value="0.8"/>
   <PARAM id="lfo1_rate" value="8.0"/><PARAM id="lfo2_rate" value="0.15"/><PARAM id="lfo2_waveform" value="1"/>
-  <PARAM id="spellbook_shape" value="3"/><PARAM id="spellbook_rate" value="1.5"/>
+  <PARAM id="orbit_shape" value="3"/><PARAM id="orbit_rate" value="1.5"/>
   <PARAM id="mod_1_src" value="1"/><PARAM id="mod_1_dst" value="2"/><PARAM id="mod_1_amt" value="0.12"/>
   <PARAM id="mod_2_src" value="8"/><PARAM id="mod_2_dst" value="6"/><PARAM id="mod_2_amt" value="0.35"/>
   <PARAM id="master_gain" value="-5"/>

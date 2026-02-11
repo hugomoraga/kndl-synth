@@ -23,6 +23,16 @@ void Voice::noteOn(int midiNote, float vel)
     currentNote = midiNote;
     velocity = vel;
     
+    // Reset modulation offsets before computing frequency (prevents voice-steal pitch glitch)
+    pitchModulation = 0.0f;
+    osc2PitchModulation = 0.0f;
+    filterCutoffMod = 0.0f;
+    filterResoMod = 0.0f;
+    osc1LevelMod = 0.0f;
+    osc2LevelMod = 0.0f;
+    subLevelMod = 0.0f;
+    ampLevelMod = 0.0f;
+    
     baseFrequency = static_cast<float>(440.0 * std::pow(2.0, (midiNote - 69) / 12.0));
     
     updateOscillatorFrequencies();
@@ -44,9 +54,9 @@ float Voice::process()
     if (!isActive)
         return 0.0f;
     
-    float osc1Out = osc1.process() * juce::jlimit(0.0f, 1.0f, osc1Level + osc1LevelMod);
-    float osc2Out = osc2.process() * juce::jlimit(0.0f, 1.0f, osc2Level + osc2LevelMod);
-    float subOut = subOsc.process() * juce::jlimit(0.0f, 1.0f, subLevel + subLevelMod);
+    float osc1Out = osc1Enabled ? osc1.process() * juce::jlimit(0.0f, 1.0f, osc1Level + osc1LevelMod) : 0.0f;
+    float osc2Out = osc2Enabled ? osc2.process() * juce::jlimit(0.0f, 1.0f, osc2Level + osc2LevelMod) : 0.0f;
+    float subOut  = subEnabled  ? subOsc.process() * juce::jlimit(0.0f, 1.0f, subLevel + subLevelMod) : 0.0f;
     
     float mixed = osc1Out + osc2Out + subOut;
     
@@ -87,6 +97,7 @@ float Voice::process()
         case FilterMode::SVF:
         default:
             filter.setCutoff(modulatedCutoff);
+            filter.setResonance(modulatedReso);
             filtered = filter.process(mixed);
             break;
     }
@@ -141,6 +152,16 @@ void Voice::reset()
     filterEnvelope.reset();
     isActive = false;
     currentNote = -1;
+    
+    // Reset modulation offsets to prevent stale values on voice reuse
+    pitchModulation = 0.0f;
+    osc2PitchModulation = 0.0f;
+    filterCutoffMod = 0.0f;
+    filterResoMod = 0.0f;
+    osc1LevelMod = 0.0f;
+    osc2LevelMod = 0.0f;
+    subLevelMod = 0.0f;
+    ampLevelMod = 0.0f;
 }
 
 void Voice::setOsc1Detune(float cents)
@@ -187,23 +208,31 @@ void Voice::applyOsc2PitchMod(float semitones)
 
 void Voice::updateOscillatorFrequencies()
 {
-    if (baseFrequency <= 0.0f)
+    if (baseFrequency <= 0.0f || !std::isfinite(baseFrequency))
         return;
     
-    float pitchMod1 = std::pow(2.0f, pitchModulation / 12.0f);
-    float pitchMod2 = std::pow(2.0f, (pitchModulation + osc2PitchModulation) / 12.0f);
+    // Clamp pitch modulation to sane range to prevent frequency overflow
+    float clampedPitchMod = juce::jlimit(-48.0f, 48.0f, pitchModulation);
+    float clampedOsc2PitchMod = juce::jlimit(-48.0f, 48.0f, osc2PitchModulation);
+    
+    float pitchMod1 = std::pow(2.0f, clampedPitchMod / 12.0f);
+    float pitchMod2 = std::pow(2.0f, (clampedPitchMod + clampedOsc2PitchMod) / 12.0f);
     
     float osc1Freq = baseFrequency * std::pow(2.0f, static_cast<float>(osc1Octave));
     osc1Freq *= std::pow(2.0f, osc1Detune / 1200.0f);
     osc1Freq *= pitchMod1;
+    osc1Freq = juce::jlimit(1.0f, 20000.0f, osc1Freq);
     osc1.setFrequency(osc1Freq);
     
     float osc2Freq = baseFrequency * std::pow(2.0f, static_cast<float>(osc2Octave));
     osc2Freq *= std::pow(2.0f, osc2Detune / 1200.0f);
     osc2Freq *= pitchMod2;
+    osc2Freq = juce::jlimit(1.0f, 20000.0f, osc2Freq);
     osc2.setFrequency(osc2Freq);
     
-    subOsc.setFrequency(baseFrequency * pitchMod1);
+    float subFreq = baseFrequency * pitchMod1;
+    subFreq = juce::jlimit(1.0f, 20000.0f, subFreq);
+    subOsc.setFrequency(subFreq);
 }
 
 } // namespace kndl

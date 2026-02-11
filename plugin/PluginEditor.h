@@ -66,10 +66,10 @@ private:
     kndl::ui::KndlPanel lfoPanel { "MODULATORS" };
     kndl::ui::KndlPanel monitorPanel { "MONITOR" };
     
-    // Scope, filter display, spellbook scope and data display
+    // Scope, filter display, orbit scope and data display
     kndl::ui::KndlScope waveScope;
     kndl::ui::KndlFilterDisplay filterDisplay;
-    kndl::ui::KndlSpellbookScope spellbookScope;
+    kndl::ui::KndlOrbitScope orbitScope;
     kndl::ui::KndlDataDisplay dataDisplay;
     
     // Modulation matrix display (initialized in constructor)
@@ -96,13 +96,13 @@ private:
     kndl::ui::KndlSlider filterSustainSlider { "S" };
     kndl::ui::KndlSlider filterReleaseSlider { "R" };
     
-    // LFO + Spellbook controls (shared MODULATORS panel)
+    // LFO + Orbit controls (shared MODULATORS panel)
     kndl::ui::KndlKnob lfo1RateKnob { "LFO1" };
     kndl::ui::KndlKnob lfo2RateKnob { "LFO2" };
     juce::ComboBox lfo1WaveformSelector;
     juce::ComboBox lfo2WaveformSelector;
-    kndl::ui::KndlKnob spellbookRateKnob { "SB.RT" };
-    juce::ComboBox spellbookShapeSelector;
+    kndl::ui::KndlKnob orbitRateKnob { "ORB.RT" };
+    juce::ComboBox orbitShapeSelector;
     
     // Filter mode selector
     juce::ComboBox filterModeSelector;
@@ -117,20 +117,24 @@ private:
     // Parameter attachments
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
+    using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
     
     // OSC1 attachments
+    std::unique_ptr<ButtonAttachment> osc1EnableAttachment;
     std::unique_ptr<SliderAttachment> osc1LevelAttachment;
     std::unique_ptr<SliderAttachment> osc1DetuneAttachment;
     std::unique_ptr<SliderAttachment> osc1OctaveAttachment;
     std::unique_ptr<ComboBoxAttachment> osc1WaveformAttachment;
     
     // OSC2 attachments
+    std::unique_ptr<ButtonAttachment> osc2EnableAttachment;
     std::unique_ptr<SliderAttachment> osc2LevelAttachment;
     std::unique_ptr<SliderAttachment> osc2DetuneAttachment;
     std::unique_ptr<SliderAttachment> osc2OctaveAttachment;
     std::unique_ptr<ComboBoxAttachment> osc2WaveformAttachment;
     
     // Sub attachments
+    std::unique_ptr<ButtonAttachment> subEnableAttachment;
     std::unique_ptr<SliderAttachment> subLevelAttachment;
     std::unique_ptr<SliderAttachment> subOctaveAttachment;
     
@@ -158,9 +162,9 @@ private:
     std::unique_ptr<ComboBoxAttachment> lfo1WaveformAttachment;
     std::unique_ptr<ComboBoxAttachment> lfo2WaveformAttachment;
     
-    // Spellbook attachments
-    std::unique_ptr<SliderAttachment> spellbookRateAttachment;
-    std::unique_ptr<ComboBoxAttachment> spellbookShapeAttachment;
+    // Orbit attachments
+    std::unique_ptr<SliderAttachment> orbitRateAttachment;
+    std::unique_ptr<ComboBoxAttachment> orbitShapeAttachment;
     
     // Filter mode attachments
     std::unique_ptr<ComboBoxAttachment> filterModeAttachment;
@@ -177,8 +181,6 @@ private:
     kndl::ui::KndlEffectSection ottSection { "OTT", {"DEPTH", "TIME", "MIX"} };
     
     // Effect attachments
-    using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
-    
     std::unique_ptr<ButtonAttachment> distEnableAttachment;
     std::unique_ptr<SliderAttachment> distDriveAttachment;
     std::unique_ptr<SliderAttachment> distMixAttachment;

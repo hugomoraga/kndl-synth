@@ -212,7 +212,7 @@ public:
         lfo2Value = lfo2;
     }
     
-    void setSpellbookValues(float a, float b, float c, float d)
+    void setOrbitValues(float a, float b, float c, float d)
     {
         sbA = a;
         sbB = b;
@@ -378,20 +378,20 @@ public:
         drawBipolarCompact(g, x2, y2, "L2", lfo2Value, theme->getAccentSecondary(), colWidth - 10);
         y2 += lineHeight + 6;
         
-        // === SPELLBOOK ===
+        // === ORBIT ===
         g.setColour(theme->getTextMuted());
         g.setFont(monoSmall);
-        g.drawText("SB.OUTPUT", x2, y2, colWidth, lineHeight, juce::Justification::left);
+        g.drawText("ORB.OUTPUT", x2, y2, colWidth, lineHeight, juce::Justification::left);
         y2 += lineHeight;
         
         g.setFont(monoFont);
-        drawBipolarCompact(g, x2, y2, "SA", sbA, theme->getAccentPrimary(), colWidth - 10);
+        drawBipolarCompact(g, x2, y2, "OA", sbA, theme->getAccentPrimary(), colWidth - 10);
         y2 += lineHeight;
-        drawBipolarCompact(g, x2, y2, "SB", sbB, theme->getAccentSecondary(), colWidth - 10);
+        drawBipolarCompact(g, x2, y2, "OB", sbB, theme->getAccentSecondary(), colWidth - 10);
         y2 += lineHeight;
-        drawBipolarCompact(g, x2, y2, "SC", sbC, theme->getAccentTertiary(), colWidth - 10);
+        drawBipolarCompact(g, x2, y2, "OC", sbC, theme->getAccentTertiary(), colWidth - 10);
         y2 += lineHeight;
-        drawBipolarCompact(g, x2, y2, "SD", sbD, theme->getWarning(), colWidth - 10);
+        drawBipolarCompact(g, x2, y2, "OD", sbD, theme->getWarning(), colWidth - 10);
         y2 += lineHeight + 6;
         
         // === OUTPUT METER ===
@@ -581,11 +581,11 @@ private:
 };
 
 /**
- * KndlSpellbookScope - Visualiza la forma del Spellbook como un XY scope estilo terminal.
+ * KndlOrbitScope - Visualiza la forma del Orbit como un XY scope estilo terminal.
  * Dibuja la trayectoria completa de la forma geométrica y un punto brillante
  * que indica la posición actual del modulador.
  */
-class KndlSpellbookScope : public juce::Component
+class KndlOrbitScope : public juce::Component
 {
 public:
     void setTheme(const Theme* newTheme)
@@ -624,7 +624,7 @@ public:
         // Title
         g.setColour(theme->getAccentTertiary());
         g.setFont(theme->getSmallFont());
-        g.drawText("SB.SHAPE", static_cast<int>(bounds.getX() + 4),
+        g.drawText("ORBIT", static_cast<int>(bounds.getX() + 4),
                    static_cast<int>(bounds.getY() + 2), 70, 12, juce::Justification::left);
         
         // Shape name
@@ -799,7 +799,7 @@ private:
     int trailIndex = 0;
     
 public:
-    int currentShape = 0; // Matches Spellbook::Shape enum
+    int currentShape = 0; // Matches Orbit::Shape enum
 };
 
 } // namespace kndl::ui
